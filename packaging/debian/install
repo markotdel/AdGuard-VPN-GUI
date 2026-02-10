@@ -1,0 +1,3 @@
+packaging/adguardvpn-gui.desktop usr/share/applications/
+packaging/adguardvpn-gui.appdata.xml usr/share/metainfo/
+src/adguardvpn_gui/ui/icons/adguardvpn.svg usr/share/icons/hicolor/scalable/apps/adguardvpn.svg

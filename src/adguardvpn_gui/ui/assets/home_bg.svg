@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#EAF6FF"/>
+      <stop offset="1" stop-color="#F7FBFF"/>
+    </linearGradient>
+    <linearGradient id="hill" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#2E7D32"/>
+      <stop offset="1" stop-color="#1B5E20"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="800" fill="url(#sky)"/>
+
+  <!-- sun -->
+  <circle cx="140" cy="150" r="58" fill="#FFD166"/>
+  <circle cx="125" cy="135" r="24" fill="#FFE29A" opacity="0.9"/>
+
+  <!-- dotted flight paths -->
+  <path d="M210 150 C 330 80, 420 120, 520 90" fill="none" stroke="#9CC6E6" stroke-width="2" stroke-dasharray="4 8" opacity="0.6"/>
+  <path d="M520 90 C 650 50, 760 90, 880 70" fill="none" stroke="#9CC6E6" stroke-width="2" stroke-dasharray="4 8" opacity="0.5"/>
+  <path d="M330 240 C 470 200, 600 240, 720 220" fill="none" stroke="#9CC6E6" stroke-width="2" stroke-dasharray="4 8" opacity="0.35"/>
+
+  <!-- clouds -->
+  <g opacity="0.9">
+    <ellipse cx="260" cy="185" rx="54" ry="28" fill="#FFFFFF"/>
+    <ellipse cx="300" cy="175" rx="72" ry="38" fill="#FFFFFF"/>
+    <ellipse cx="350" cy="187" rx="52" ry="26" fill="#FFFFFF"/>
+  </g>
+  <g opacity="0.85">
+    <ellipse cx="650" cy="140" rx="44" ry="22" fill="#FFFFFF"/>
+    <ellipse cx="690" cy="132" rx="66" ry="34" fill="#FFFFFF"/>
+    <ellipse cx="740" cy="142" rx="40" ry="20" fill="#FFFFFF"/>
+  </g>
+
+  <!-- foreground hills -->
+  <path d="M0 520 C 220 430, 420 500, 600 450 C 800 395, 980 460, 1200 420 L 1200 800 L 0 800 Z" fill="#2E7D32"/>
+  <path d="M0 590 C 210 520, 430 610, 620 560 C 840 505, 1010 590, 1200 545 L 1200 800 L 0 800 Z" fill="url(#hill)"/>
+
+  <!-- soft shadow layer -->
+  <path d="M40 620 C 260 560, 430 650, 640 610 C 870 565, 980 640, 1160 615" fill="none" stroke="#0B2E10" stroke-width="26" opacity="0.10" filter="url(#soft)"/>
+
+  <!-- simple 'guardian' character silhouette (original, not copied) -->
+  <g transform="translate(240,430)">
+    <ellipse cx="0" cy="130" rx="150" ry="105" fill="#1B5E20" opacity="0.18"/>
+    <path d="M-40 190 C -85 145,-88 62,-20 40 C 10 10, 60 16, 78 52 C 105 105, 60 180, 18 198 C -8 210, -24 210, -40 190 Z" fill="#2C3E50"/>
+    <path d="M-12 58 C -26 68,-28 84,-18 96 C -4 114, 18 114, 30 98 C 42 82, 36 60, 18 52 C 6 48, -4 50, -12 58 Z" fill="#111827" opacity="0.85"/>
+    <path d="M-10 88 C -2 80, 10 80, 18 88 C 26 96, 26 108, 16 116 C 6 124, -6 120, -14 110 C -22 100, -20 92, -10 88 Z" fill="#F59E0B" opacity="0.9"/>
+    <path d="M85 55 L 130 10" stroke="#111827" stroke-width="10" stroke-linecap="round"/>
+    <path d="M125 15 L 150 -5" stroke="#111827" stroke-width="8" stroke-linecap="round" opacity="0.7"/>
+  </g>
+</svg>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+  <id>adguardvpn-gui.desktop</id>
+  <name>AdGuard VPN GUI</name>
+  <summary>Graphical interface for AdGuard VPN CLI</summary>
+  <description>
+    <p>GUI wrapper around adguardvpn-cli for Linux with tabs and tray icon.</p>
+  </description>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+</component>

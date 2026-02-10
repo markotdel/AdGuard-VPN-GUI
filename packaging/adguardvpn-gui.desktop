@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=AdGuard VPN
+Comment=GUI for AdGuard VPN CLI
+Exec=adguardvpn-gui
+Icon=adguardvpn
+Terminal=false
+Type=Application
+Categories=Network;Security;
+StartupNotify=true

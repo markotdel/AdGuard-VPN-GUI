@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adguardvpn-gui"
+version = "0.3.3.3"
+description = "GUI wrapper for AdGuard VPN CLI (tabs + tray)"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name="Ivan"}]
+license = {text="MIT"}
+dependencies = ["distro>=1.9.0"]
+
+[project.scripts]
+adguardvpn-gui = "adguardvpn_gui.main:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.package-data]
+adguardvpn_gui = ["ui/*.ui", "ui/*.css", "ui/assets/*.svg", "ui/icons/*.svg"]

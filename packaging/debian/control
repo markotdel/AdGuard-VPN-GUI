@@ -1,0 +1,13 @@
+Source: adguardvpn-gui
+Section: net
+Priority: optional
+Maintainer: Ivan <ivan@localhost>
+Build-Depends: debhelper-compat (= 13), dh-python, python3-all
+Standards-Version: 4.6.2
+
+Package: adguardvpn-gui
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}, python3, python3-gi, gir1.2-gtk-3.0, gir1.2-ayatanaappindicator3-0.1
+Recommends: adguardvpn-cli
+Description: GUI wrapper for AdGuard VPN CLI
+ Tabs + tray icon. Uses adguardvpn-cli as backend.

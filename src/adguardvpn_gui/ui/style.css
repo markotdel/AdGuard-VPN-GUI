@@ -1,0 +1,42 @@
+
+/* AdGuardVPN-GUI styling (original; inspired layout) */
+#home_left_panel {
+  background: rgba(0,0,0,0.35);
+  border-radius: 14px;
+  padding: 18px;
+}
+#home_title_connected {
+  color: #FFFFFF;
+  font-size: 44px;
+  font-weight: 800;
+}
+#home_subtitle {
+  color: rgba(255,255,255,0.9);
+  font-size: 14px;
+}
+#primary_btn {
+  background: #FFFFFF;
+  color: #111827;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 700;
+}
+#secondary_btn {
+  background: rgba(255,255,255,0.12);
+  color: #FFFFFF;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 700;
+}
+#home_card {
+  border-radius: 14px;
+  background: #FFFFFF;
+}
+#home_card_header {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+}
+#small_muted {
+  color: rgba(17,24,39,0.70);
+}

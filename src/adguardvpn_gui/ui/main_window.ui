@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk+" version="3.20"/>
+
+  <object class="GtkWindow" id="main_window">
+    <property name="default-width">1180</property>
+    <property name="default-height">720</property>
+    <property name="title">AdGuard VPN</property>
+    <property name="window-position">center</property>
+
+    <child>
+      <object class="GtkBox" id="root_box">
+        <property name="orientation">vertical</property>
+
+        <child>
+          <object class="GtkHeaderBar" id="headerbar">
+            <property name="show-close-button">true</property>
+            <property name="title">AdGuard VPN</property>
+
+            <child type="end">
+              <object class="GtkButton" id="btn_refresh_all">
+                <property name="label">Обновить</property>
+              </object>
+            </child>
+          </object>
+        </child>
+
+        <child>
+          <object class="GtkNotebook" id="notebook">
+            <property name="tab-pos">top</property>
+
+            <!-- HOME -->
+            <child>
+              <object class="GtkPaned" id="home_paned">
+                <property name="orientation">horizontal</property>
+
+                <!-- LEFT: background + hero overlay -->
+                <child>
+                  <object class="GtkOverlay" id="home_overlay">
+                    <property name="width-request">760</property>
+
+                    <child>
+                      <object class="GtkImage" id="img_home_bg">
+                        <property name="pixel-size">520</property>
+                      </object>
+                    </child>
+
+                    <child type="overlay">
+                      <object class="GtkBox" id="home_left_panel">
+                        <property name="orientation">vertical</property>
+                        <property name="halign">start</property>
+                        <property name="valign">end</property>
+                        <property name="margin">18</property>
+                        <property name="spacing">10</property>
+
+                        <child>
+                          <object class="GtkLabel" id="home_title_connected">
+                            <property name="label">Подключён</property>
+                            <property name="xalign">0</property>
+                          </object>
+                        </child>
+
+                        <child>
+                          <object class="GtkLabel" id="home_subtitle">
+                            <property name="label">…</property>
+                            <property name="xalign">0</property>
+                            <property name="wrap">true</property>
+                          </object>
+                        </child>
+
+                        <child>
+                          <object class="GtkBox" id="home_btn_row">
+                            <property name="orientation">vertical</property>
+                            <property name="spacing">8</property>
+
+                            <child>
+                              <object class="GtkButton" id="btn_disconnect">
+                                <property name="label">Отключить</property>
+                                <property name="can-focus">true</property>
+                              </object>
+                            </child>
+
+                            <child>
+                              <object class="GtkButton" id="btn_connect">
+                                <property name="label">Подключить</property>
+                                <property name="can-focus">true</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+
+                        <child>
+                          <object class="GtkBox" id="home_current_row">
+                            <property name="orientation">horizontal</property>
+                            <property name="spacing">8</property>
+                            <child>
+                              <object class="GtkLabel" id="lbl_current_location">
+                                <property name="label">США • Нью-Йорк</property>
+                                <property name="xalign">0</property>
+                                <property name="wrap">true</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="lbl_current_ping">
+                                <property name="label">—</property>
+                                <property name="xalign">1</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+
+                      </object>
+                    </child>
+
+                  </object>
+                </child>
+
+                <!-- RIGHT: locations list like Windows -->
+                <child>
+                  <object class="GtkBox" id="home_right">
+                    <property name="orientation">vertical</property>
+                    <property name="spacing">12</property>
+                    <property name="margin">16</property>
+
+                    <child>
+                      <object class="GtkSearchEntry" id="entry_search">
+                        <property name="placeholder-text">Поиск</property>
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">horizontal</property>
+                        <property name="spacing">10</property>
+
+                        <child>
+                          <object class="GtkToggleButton" id="toggle_all">
+                            <property name="label">Все</property>
+                            <property name="active">true</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkToggleButton" id="toggle_saved">
+                            <property name="label">Сохранённые</property>
+                          </object>
+                        </child>
+
+                        <child>
+                          <object class="GtkButton" id="btn_fastest">
+                            <property name="label">Самая быстрая</property>
+                          </object>
+                        </child>
+
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkFrame" id="frame_fast">
+                        <property name="label">Самые быстрые локации</property>
+                        <child>
+                          <object class="GtkScrolledWindow">
+                            <property name="vexpand">true</property>
+                            <child>
+                              <object class="GtkTreeView" id="tv_fast"/>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkFrame" id="frame_all">
+                        <property name="label">Все локации</property>
+                        <child>
+                          <object class="GtkScrolledWindow">
+                            <property name="vexpand">true</property>
+                            <child>
+                              <object class="GtkTreeView" id="tv_all"/>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+
+                  </object>
+                </child>
+
+              </object>
+            </child>
+            <child type="tab"><object class="GtkLabel"><property name="label">Главная</property></object></child>
+
+            <!-- EXCLUSIONS -->
+            <child>
+              <object class="GtkBox" id="excl_page">
+                <property name="orientation">vertical</property>
+                <property name="spacing">12</property>
+                <property name="margin">16</property>
+
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label">Исключения</property>
+                    <attributes>
+                      <attribute name="scale" value="1.4"/>
+                      <attribute name="weight" value="700"/>
+                    </attributes>
+                    <property name="xalign">0</property>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkBox">
+                    <property name="orientation">horizontal</property>
+                    <property name="spacing">10</property>
+                    <child>
+                      <object class="GtkLabel" id="lbl_excl_mode">
+                        <property name="label">Режим исключений: —</property>
+                        <property name="xalign">0</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkComboBoxText" id="cmb_excl_mode">
+                        <items>
+                          <item id="GENERAL">GENERAL</item>
+                          <item id="SELECTIVE">SELECTIVE</item>
+                        </items>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="btn_excl_apply_mode">
+                        <property name="label">Применить</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkBox">
+                    <property name="orientation">horizontal</property>
+                    <property name="spacing">8</property>
+                    <child>
+                      <object class="GtkEntry" id="entry_excl_add">
+                        <property name="placeholder-text">example.com</property>
+                      </object>
+                    </child>
+                    <child><object class="GtkButton" id="btn_excl_add"><property name="label">Добавить</property></object></child>
+                    <child><object class="GtkButton" id="btn_excl_remove"><property name="label">Удалить</property></object></child>
+                    <child><object class="GtkButton" id="btn_excl_clear"><property name="label">Очистить</property></object></child>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkScrolledWindow">
+                    <property name="vexpand">true</property>
+                    <child><object class="GtkTreeView" id="tv_excl"/></child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child type="tab"><object class="GtkLabel"><property name="label">Исключения</property></object></child>
+
+            <!-- STATS -->
+            <child>
+              <object class="GtkBox" id="stats_page">
+                <property name="orientation">vertical</property>
+                <property name="spacing">12</property>
+                <property name="margin">16</property>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label">Статистика (локальная)</property>
+                    <attributes>
+                      <attribute name="scale" value="1.4"/>
+                      <attribute name="weight" value="700"/>
+                    </attributes>
+                    <property name="xalign">0</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkGrid" id="grid_stats">
+                    <property name="row-spacing">8</property>
+                    <property name="column-spacing">24</property>
+
+                    <child><object class="GtkLabel"><property name="label">Интерфейс:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">0</property></packing></child>
+                    <child><object class="GtkLabel" id="lbl_stat_iface_v"><property name="label">—</property><property name="xalign">0</property></object><packing><property name="left-attach">1</property><property name="top-attach">0</property></packing></child>
+
+                    <child><object class="GtkLabel"><property name="label">Скачано (RX):</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">1</property></packing></child>
+                    <child><object class="GtkLabel" id="lbl_stat_in_v"><property name="label">—</property><property name="xalign">0</property></object><packing><property name="left-attach">1</property><property name="top-attach">1</property></packing></child>
+
+                    <child><object class="GtkLabel"><property name="label">Отправлено (TX):</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">2</property></packing></child>
+                    <child><object class="GtkLabel" id="lbl_stat_out_v"><property name="label">—</property><property name="xalign">0</property></object><packing><property name="left-attach">1</property><property name="top-attach">2</property></packing></child>
+
+                    <child><object class="GtkLabel"><property name="label">Сессия:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">3</property></packing></child>
+                    <child><object class="GtkLabel" id="lbl_stat_session_v"><property name="label">—</property><property name="xalign">0</property></object><packing><property name="left-attach">1</property><property name="top-attach">3</property></packing></child>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkFrame">
+                    <property name="label">История по дням</property>
+                    <child>
+                      <object class="GtkScrolledWindow">
+                        <property name="vexpand">true</property>
+                        <child><object class="GtkTreeView" id="tv_stats_history"/></child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child type="tab"><object class="GtkLabel"><property name="label">Статистика</property></object></child>
+
+            <!-- SUPPORT -->
+            <child>
+              <object class="GtkBox" id="support_page">
+                <property name="orientation">vertical</property>
+                <property name="spacing">12</property>
+                <property name="margin">16</property>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label">Поддержка</property>
+                    <attributes>
+                      <attribute name="scale" value="1.4"/>
+                      <attribute name="weight" value="700"/>
+                    </attributes>
+                    <property name="xalign">0</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="orientation">horizontal</property>
+                    <property name="spacing">8</property>
+                    <child><object class="GtkFileChooserButton" id="fc_logs_dir"><property name="action">select-folder</property><property name="title">Выберите папку</property></object></child>
+                    <child><object class="GtkButton" id="btn_export_logs"><property name="label">Экспорт логов</property></object></child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="lbl_support_out">
+                    <property name="label">—</property>
+                    <property name="xalign">0</property>
+                    <property name="wrap">true</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkSeparator">
+                    <property name="orientation">horizontal</property>
+                    <property name="margin-top">8</property>
+                    <property name="margin-bottom">8</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label">© 2026 SubBotIn • markotdel@gmail.com</property>
+                    <property name="xalign">0</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLinkButton" id="lnk_source">
+                    <property name="label">Source available on GitHub</property>
+                    <property name="uri">https://github.com/markotdel/AdGuard-VPN-GUI</property>
+                    <property name="xalign">0</property>
+                  </object>
+                </child>
+
+              </object>
+            </child>
+            <child type="tab"><object class="GtkLabel"><property name="label">Поддержка</property></object></child>
+
+            <!-- SETTINGS -->
+            <child>
+              <object class="GtkBox" id="settings_page">
+                <property name="orientation">vertical</property>
+                <property name="spacing">12</property>
+                <property name="margin">16</property>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label">Настройки</property>
+                    <attributes>
+                      <attribute name="scale" value="1.4"/>
+                      <attribute name="weight" value="700"/>
+                    </attributes>
+                    <property name="xalign">0</property>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkGrid" id="grid_settings">
+                    <property name="row-spacing">10</property>
+                    <property name="column-spacing">16</property>
+
+                    <child><object class="GtkLabel"><property name="label">Mode:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">0</property></packing></child>
+                    <child><object class="GtkComboBoxText" id="cmb_mode"><items><item id="tun">tun</item><item id="socks">socks</item></items></object><packing><property name="left-attach">1</property><property name="top-attach">0</property></packing></child>
+
+                    <child><object class="GtkLabel"><property name="label">DNS upstream:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">1</property></packing></child>
+                    <child><object class="GtkEntry" id="entry_dns"><property name="placeholder-text">пусто = Default</property></object><packing><property name="left-attach">1</property><property name="top-attach">1</property></packing></child>
+
+                    <child><object class="GtkLabel"><property name="label">Change system DNS:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">2</property></packing></child>
+                    <child><object class="GtkSwitch" id="sw_change_dns"/><packing><property name="left-attach">1</property><property name="top-attach">2</property></packing></child>
+
+                    <child><object class="GtkLabel"><property name="label">Crash reporting:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">3</property></packing></child>
+                    <child><object class="GtkSwitch" id="sw_crash"/><packing><property name="left-attach">1</property><property name="top-attach">3</property></packing></child>
+
+                    <child><object class="GtkLabel"><property name="label">Telemetry:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">4</property></packing></child>
+                    <child><object class="GtkSwitch" id="sw_telemetry"/><packing><property name="left-attach">1</property><property name="top-attach">4</property></packing></child>
+
+                    <child><object class="GtkLabel"><property name="label">Protocol:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">5</property></packing></child>
+                    <child><object class="GtkComboBoxText" id="cmb_protocol"><items><item id="auto">auto</item><item id="http2">http2</item><item id="quic">quic</item></items></object><packing><property name="left-attach">1</property><property name="top-attach">5</property></packing></child>
+
+                    <child><object class="GtkLabel"><property name="label">Post-quantum:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">6</property></packing></child>
+                    <child><object class="GtkSwitch" id="sw_pq"/><packing><property name="left-attach">1</property><property name="top-attach">6</property></packing></child>
+
+                    <child><object class="GtkLabel"><property name="label">Update channel:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">7</property></packing></child>
+                    <child><object class="GtkComboBoxText" id="cmb_update_channel"><items><item id="release">release</item><item id="beta">beta</item><item id="nightly">nightly</item></items></object><packing><property name="left-attach">1</property><property name="top-attach">7</property></packing></child>
+
+                    <child><object class="GtkLabel"><property name="label">Debug logging:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">8</property></packing></child>
+                    <child><object class="GtkSwitch" id="sw_debug"/><packing><property name="left-attach">1</property><property name="top-attach">8</property></packing></child>
+
+                    <child><object class="GtkLabel"><property name="label">Show notifications:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">9</property></packing></child>
+                    <child><object class="GtkSwitch" id="sw_notify"/><packing><property name="left-attach">1</property><property name="top-attach">9</property></packing></child>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkButtonBox">
+                    <property name="layout-style">end</property>
+                    <property name="spacing">8</property>
+                    <child><object class="GtkButton" id="btn_settings_reload"><property name="label">Обновить из CLI</property></object></child>
+                    <child><object class="GtkButton" id="btn_settings_apply"><property name="label">Применить</property></object></child>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkLabel" id="lbl_settings_out">
+                    <property name="label">—</property>
+                    <property name="xalign">0</property>
+                    <property name="wrap">true</property>
+                  </object>
+                </child>
+
+              </object>
+            </child>
+            <child type="tab"><object class="GtkLabel"><property name="label">Настройки</property></object></child>
+
+          </object>
+        </child>
+
+        <child>
+          <object class="GtkInfoBar" id="infobar">
+            <property name="message-type">info</property>
+            <property name="visible">false</property>
+            <child internal-child="content_area">
+              <object class="GtkBox">
+                <property name="orientation">horizontal</property>
+                <property name="spacing">8</property>
+                <child>
+                  <object class="GtkLabel" id="lbl_info">
+                    <property name="label">—</property>
+                    <property name="xalign">0</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+
+      </object>
+    </child>
+  </object>
+</interface>

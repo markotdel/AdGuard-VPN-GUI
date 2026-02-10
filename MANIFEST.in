@@ -1,0 +1,1 @@
+recursive-include src/adguardvpn_gui/ui *.ui *.css *.svg
