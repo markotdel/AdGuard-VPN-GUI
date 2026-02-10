@@ -172,10 +172,7 @@ class App:
         # Signals
         self.btn_refresh_all.connect("clicked", lambda *_: self.refresh_all())
         self.btn_fastest.connect("clicked", lambda *_: self.connect_fastest())
-        # Connect button must be able to authenticate via GUI prompt.
-        # We run the connect command through pkexec (polkit), which shows
-        # a password dialog when needed.
-        self.btn_connect.connect("clicked", lambda *_: self.connect_selected_pkexec())
+        self.btn_connect.connect("clicked", lambda *_: self.connect_selected())
         self.btn_disconnect.connect("clicked", lambda *_: self.disconnect())
         self.entry_search.connect("search-changed", lambda *_: self.store_all_filtered.refilter())
         self.tv_fast.connect("row-activated", self.on_row_activated)
@@ -315,6 +312,30 @@ class App:
         self.infobar.set_visible(True)
         GLib.timeout_add(3500, self._hide_infobar)
 
+    def _ask_sudo_password(self) -> str|None:
+        dlg = Gtk.Dialog(title="Введите пароль sudo", parent=self.win, flags=0)
+        dlg.add_button("Отмена", Gtk.ResponseType.CANCEL)
+        dlg.add_button("OK", Gtk.ResponseType.OK)
+        box = dlg.get_content_area()
+        box.set_spacing(8)
+        lbl = Gtk.Label(label="Для подключения требуется пароль sudo.")
+        lbl.set_xalign(0)
+        entry = Gtk.Entry()
+        entry.set_visibility(False)
+        entry.set_invisible_char("•")
+        entry.set_activates_default(True)
+        dlg.set_default_response(Gtk.ResponseType.OK)
+        box.add(lbl)
+        box.add(entry)
+        dlg.show_all()
+        resp = dlg.run()
+        pwd = entry.get_text() if resp == Gtk.ResponseType.OK else None
+        dlg.destroy()
+        if pwd is not None:
+            pwd = pwd.strip()
+        return pwd or None
+
+
     def _hide_infobar(self):
         self.infobar.set_visible(False)
         return False
@@ -437,48 +458,23 @@ class App:
             return
         self.connect_location(loc)
 
-    # Only the "Подключить" button uses pkexec so the user gets a GUI password prompt.
-    # This keeps the rest of the mechanics unchanged.
-    def connect_selected_pkexec(self):
-        loc = self._selected_location()
-        if not loc:
-            self.info("Выбери локацию справа или нажми «Самая быстрая».", err=True)
-            return
-        self.info(f"Подключаюсь к {loc}…")
-        run_bg(lambda: self._pkexec_connect_location(loc),
-               lambda out: (self.info(out or "Подключено"), self.refresh_all()),
-               lambda e: self.info(f"Ошибка: {e}", err=True))
-
-    def _pkexec_connect_location(self, loc: str) -> str:
-        import os, subprocess
-        env = os.environ.copy()
-        cmd = ["pkexec", "env"]
-
-        # pkexec очищает окружение, поэтому явно пробрасываем DISPLAY/XAUTHORITY и PATH.
-        if env.get("DISPLAY"):
-            cmd.append(f"DISPLAY={env['DISPLAY']}")
-        if env.get("XAUTHORITY"):
-            cmd.append(f"XAUTHORITY={env['XAUTHORITY']}")
-        if env.get("PATH"):
-            cmd.append(f"PATH={env['PATH']}")
-
-        cmd += ["adguardvpn-cli", "connect", "-l", str(loc), "-y"]
-        p = subprocess.run(cmd, capture_output=True, text=True)
-        out = (p.stdout or "").strip()
-        err = (p.stderr or "").strip()
-        if p.returncode != 0:
-            raise RuntimeError(err or out or f"pkexec failed (code {p.returncode})")
-        return out
-
     def connect_location(self, loc: str):
         self.info(f"Подключаюсь к {loc}…")
-        run_bg(lambda: cli.connect_location(loc),
+        pwd = self._ask_sudo_password()
+        if not pwd:
+            self.info("Отменено", err=True)
+            return
+        run_bg(lambda: cli.connect_location_pw(loc, pwd),
                lambda out: (self.info(out or "Подключено"), self.refresh_all()),
                lambda e: self.info(f"Ошибка: {e}", err=True))
 
     def connect_fastest(self):
         self.info("Подключаюсь к самой быстрой…")
-        run_bg(lambda: cli.connect_fastest(),
+        pwd = self._ask_sudo_password()
+        if not pwd:
+            self.info("Отменено", err=True)
+            return
+        run_bg(lambda: cli.connect_fastest_pw(pwd),
                lambda out: (self.info(out or "Подключено"), self.refresh_all()),
                lambda e: self.info(f"Ошибка: {e}", err=True))
 
