@@ -25,7 +25,42 @@ echo "==> Installing system dependencies (requires sudo)"
 sudo apt update
 sudo apt install -y \
   python3 python3-venv python3-pip python3-gi gir1.2-gtk-3.0 gir1.2-ayatanaappindicator3-0.1 \
-  xdg-utils desktop-file-utils
+  xdg-utils desktop-file-utils gir1.2-rsvg-2.0
+
+CLI_PATH="$(command -v adguardvpn-cli || true)"
+if [ -n "$CLI_PATH" ]; then
+  echo "==> Configuring passwordless privileges for GUI usage (requires sudo)"
+
+  # 1) Sudoers (best-effort). Some adguardvpn-cli builds spawn sudo internally, so we ALSO configure polkit below.
+  SUDOERS_FILE="/etc/sudoers.d/adguardvpn-gui"
+  RULE="${USER} ALL=(root) NOPASSWD: ${CLI_PATH} *"
+  echo "$RULE" | sudo tee "$SUDOERS_FILE" >/dev/null
+  sudo chmod 440 "$SUDOERS_FILE"
+  sudo visudo -cf "$SUDOERS_FILE" >/dev/null
+
+  # 2) Polkit rule for pkexec adguardvpn-cli (so GUI can run privileged commands without password)
+  # Restrict to users in group "sudo" (Ubuntu default admin group).
+  if command -v pkexec >/dev/null 2>&1; then
+    POLKIT_RULE="/etc/polkit-1/rules.d/49-adguardvpn-gui.rules"
+    echo "==> Installing polkit rule: $POLKIT_RULE"
+    sudo tee "$POLKIT_RULE" >/dev/null <<EOF
+polkit.addRule(function(action, subject) {
+  try {
+    if (action.id === "org.freedesktop.policykit.exec" &&
+        action.lookup("program") === "${CLI_PATH}" &&
+        subject.active === true && subject.local === true &&
+        subject.isInGroup("sudo")) {
+      return polkit.Result.YES;
+    }
+  } catch (e) {}
+});
+EOF
+    sudo chmod 644 "$POLKIT_RULE"
+  fi
+else
+  echo "WARNING: adguardvpn-cli not found in PATH. Install AdGuard VPN CLI first."
+fi
+
 
 # Create an app-managed venv (PEP 668 safe) and install there
 APP_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/${APP_ID}"

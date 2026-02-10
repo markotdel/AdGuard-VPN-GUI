@@ -17,10 +17,15 @@
             <property name="show-close-button">true</property>
             <property name="title">AdGuard VPN</property>
 
-            <child type="end">
+            <!-- GtkBuilder for Gtk3 doesn't support child type="end" reliably across distros.
+                 Use packing/pack-type instead. -->
+            <child>
               <object class="GtkButton" id="btn_refresh_all">
                 <property name="label">Обновить</property>
               </object>
+              <packing>
+                <property name="pack-type">end</property>
+              </packing>
             </child>
           </object>
         </child>
@@ -33,91 +38,11 @@
             <child>
               <object class="GtkPaned" id="home_paned">
                 <property name="orientation">horizontal</property>
+                <property name="position">360</property>
 
-                <!-- LEFT: background + hero overlay -->
+                <!-- LEFT: locations list -->
                 <child>
-                  <object class="GtkOverlay" id="home_overlay">
-                    <property name="width-request">760</property>
-
-                    <child>
-                      <object class="GtkImage" id="img_home_bg">
-                        <property name="pixel-size">520</property>
-                      </object>
-                    </child>
-
-                    <child type="overlay">
-                      <object class="GtkBox" id="home_left_panel">
-                        <property name="orientation">vertical</property>
-                        <property name="halign">start</property>
-                        <property name="valign">end</property>
-                        <property name="margin">18</property>
-                        <property name="spacing">10</property>
-
-                        <child>
-                          <object class="GtkLabel" id="home_title_connected">
-                            <property name="label">Подключён</property>
-                            <property name="xalign">0</property>
-                          </object>
-                        </child>
-
-                        <child>
-                          <object class="GtkLabel" id="home_subtitle">
-                            <property name="label">…</property>
-                            <property name="xalign">0</property>
-                            <property name="wrap">true</property>
-                          </object>
-                        </child>
-
-                        <child>
-                          <object class="GtkBox" id="home_btn_row">
-                            <property name="orientation">vertical</property>
-                            <property name="spacing">8</property>
-
-                            <child>
-                              <object class="GtkButton" id="btn_disconnect">
-                                <property name="label">Отключить</property>
-                                <property name="can-focus">true</property>
-                              </object>
-                            </child>
-
-                            <child>
-                              <object class="GtkButton" id="btn_connect">
-                                <property name="label">Подключить</property>
-                                <property name="can-focus">true</property>
-                              </object>
-                            </child>
-                          </object>
-                        </child>
-
-                        <child>
-                          <object class="GtkBox" id="home_current_row">
-                            <property name="orientation">horizontal</property>
-                            <property name="spacing">8</property>
-                            <child>
-                              <object class="GtkLabel" id="lbl_current_location">
-                                <property name="label">США • Нью-Йорк</property>
-                                <property name="xalign">0</property>
-                                <property name="wrap">true</property>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkLabel" id="lbl_current_ping">
-                                <property name="label">—</property>
-                                <property name="xalign">1</property>
-                              </object>
-                            </child>
-                          </object>
-                        </child>
-
-                      </object>
-                    </child>
-
-                  </object>
-                </child>
-
-                <!-- RIGHT: locations list like Windows -->
-                <child>
-                  <object class="GtkBox" id="home_right">
+                  <object class="GtkBox" id="home_locations">
                     <property name="orientation">vertical</property>
                     <property name="spacing">12</property>
                     <property name="margin">16</property>
@@ -129,7 +54,7 @@
                     </child>
 
                     <child>
-                      <object class="GtkBox">
+                      <object class="GtkBox" id="home_filter_row">
                         <property name="orientation">horizontal</property>
                         <property name="spacing">10</property>
 
@@ -179,6 +104,92 @@
                             </child>
                           </object>
                         </child>
+                      </object>
+                    </child>
+
+                  </object>
+                </child>
+
+                <!-- RIGHT: scalable background + hero overlay -->
+                <child>
+                  <object class="GtkOverlay" id="home_overlay">
+                    <property name="hexpand">true</property>
+                    <property name="vexpand">true</property>
+
+                    <child>
+                      <!-- Background. If GtkImage is present, code will use it.
+                           If not, code falls back to drawing area.
+                           Keep drawing area to guarantee scaling on all GTK3 builds. -->
+                      <object class="GtkDrawingArea" id="da_home_bg">
+                        <property name="hexpand">true</property>
+                        <property name="vexpand">true</property>
+                      </object>
+                    </child>
+
+                    <child type="overlay">
+                      <object class="GtkBox" id="home_left_panel">
+                        <property name="orientation">vertical</property>
+                        <property name="halign">start</property>
+                        <property name="valign">end</property>
+                        <property name="margin">18</property>
+                        <property name="spacing">10</property>
+
+                        <child>
+                          <object class="GtkLabel" id="home_title_connected">
+                            <property name="label">Отключён</property>
+                            <property name="xalign">0</property>
+                          </object>
+                        </child>
+
+                        <child>
+                          <object class="GtkLabel" id="home_subtitle">
+                            <property name="label">…</property>
+                            <property name="xalign">0</property>
+                            <property name="wrap">true</property>
+                          </object>
+                        </child>
+
+                        <child>
+                          <object class="GtkBox" id="home_btn_row">
+                            <property name="orientation">vertical</property>
+                            <property name="spacing">8</property>
+
+                            <child>
+                              <object class="GtkButton" id="btn_connect">
+                                <property name="label">Подключить</property>
+                                <property name="can-focus">true</property>
+                              </object>
+                            </child>
+
+                            <child>
+                              <object class="GtkButton" id="btn_disconnect">
+                                <property name="label">Отключить</property>
+                                <property name="can-focus">true</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+
+                        <child>
+                          <object class="GtkBox" id="home_current_row">
+                            <property name="orientation">horizontal</property>
+                            <property name="spacing">8</property>
+                            <child>
+                              <object class="GtkLabel" id="lbl_current_location">
+                                <property name="label">—</property>
+                                <property name="xalign">0</property>
+                                <property name="wrap">true</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="lbl_current_ping">
+                                <property name="label">—</property>
+                                <property name="xalign">1</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+
                       </object>
                     </child>
 

@@ -37,9 +37,12 @@ _ensure_gi_visible()
 
 import gi
 gi.require_version("Gtk","3.0")
-from gi.repository import Gtk, GLib, Gdk
+gi.require_version("Rsvg","2.0")
+from gi.repository import Gtk, GLib, Gdk, Rsvg
 
-from . import cli
+import cairo
+
+from . import cli, __version__
 from .tray import Tray
 from .utils import human_bytes
 from .state import load_stats, save_stats, today_key
@@ -88,7 +91,15 @@ class App:
     def __init__(self):
         self.b = Gtk.Builder.new_from_file(str(UI))
         self.win: Gtk.Window = self.b.get_object("main_window")
-        self.win.set_default_size(960, 620)
+        self.win.set_default_size(1280, 720)
+        title = f"AdGuard VPN-GUI v{__version__}"
+        self.win.set_title(title)
+        try:
+            hb = self.b.get_object("headerbar")
+            if hb:
+                hb.set_title(title)
+        except Exception:
+            pass
         self.win.set_resizable(True)
         self.win.connect("delete-event", self.on_close_to_tray)
 
@@ -96,7 +107,9 @@ class App:
         self.btn_refresh_all: Gtk.Button = self.b.get_object("btn_refresh_all")
 
         # Home
-        self.img_home_bg: Gtk.Image = self.b.get_object("img_home_bg")
+        # Older UI builds used GtkImage("img_home_bg"), newer ones may use GtkDrawingArea("da_home_bg").
+        self.img_home_bg = self.b.get_object("img_home_bg")
+        self.da_home_bg = self.b.get_object("da_home_bg")
         self.home_title: Gtk.Label = self.b.get_object("home_title_connected")
         self.home_sub: Gtk.Label = self.b.get_object("home_subtitle")
         self.home_sub.set_line_wrap(True)
@@ -159,7 +172,10 @@ class App:
         # Signals
         self.btn_refresh_all.connect("clicked", lambda *_: self.refresh_all())
         self.btn_fastest.connect("clicked", lambda *_: self.connect_fastest())
-        self.btn_connect.connect("clicked", lambda *_: self.connect_selected())
+        # Connect button must be able to authenticate via GUI prompt.
+        # We run the connect command through pkexec (polkit), which shows
+        # a password dialog when needed.
+        self.btn_connect.connect("clicked", lambda *_: self.connect_selected_pkexec())
         self.btn_disconnect.connect("clicked", lambda *_: self.disconnect())
         self.entry_search.connect("search-changed", lambda *_: self.store_all_filtered.refilter())
         self.tv_fast.connect("row-activated", self.on_row_activated)
@@ -194,8 +210,54 @@ class App:
         )
 
     def _apply_home_styles(self):
-        # Set bg image
-        self.img_home_bg.set_from_file(str(BG))
+        # Set / draw background image
+        if self.img_home_bg is not None:
+            # Legacy GtkImage background
+            try:
+                self.img_home_bg.set_from_file(str(BG))
+            except Exception:
+                pass
+        elif self.da_home_bg is not None:
+            # Draw SVG scaled to widget size
+            try:
+                self._bg_svg = Rsvg.Handle.new_from_file(str(BG))
+            except Exception:
+                self._bg_svg = None
+
+            def _draw_bg(area, cr: cairo.Context):
+                if not self._bg_svg:
+                    return False
+                alloc = area.get_allocation()
+                w, h = max(1, alloc.width), max(1, alloc.height)
+                try:
+                    dim = self._bg_svg.get_dimensions()
+                    sw, sh = max(1, dim.width), max(1, dim.height)
+                except Exception:
+                    sw, sh = 1920, 1080
+
+                sx, sy = w / sw, h / sh
+                s = max(sx, sy)  # cover
+                tx = (w - sw * s) / 2.0
+                ty = (h - sh * s) / 2.0
+
+                cr.save()
+                cr.translate(tx, ty)
+                cr.scale(s, s)
+                try:
+                    self._bg_svg.render_cairo(cr)
+                except Exception:
+                    # Fallback to old API name
+                    try:
+                        self._bg_svg.render_cairo(cr)
+                    except Exception:
+                        pass
+                cr.restore()
+                return False
+
+            # Connect once
+            if not getattr(self, "_bg_draw_connected", False):
+                self.da_home_bg.connect("draw", _draw_bg)
+                self._bg_draw_connected = True
 
         # Named styles
         self.b.get_object("home_left_panel").set_name("home_left_panel")
@@ -203,10 +265,11 @@ class App:
         self.home_sub.set_name("home_subtitle")
 
         # Buttons: primary (white) for Disconnect like in screenshot, secondary for Connect (transparent)
-        self.btn_disconnect.set_name("primary_btn")
-        self.btn_connect.set_name("secondary_btn")
+        self.btn_disconnect.set_name("disconnect_btn")
+        self.btn_connect.set_name("connect_btn")
 
     def _setup_models(self):
+        self.btn_disconnect.hide()
         # Locations
         self.store_fast = Gtk.ListStore(str,str,str,int)
         self.store_all = Gtk.ListStore(str,str,str,int)
@@ -260,6 +323,26 @@ class App:
         self.win.show_all()
         self.win.present()
 
+
+    def _draw_home_bg(self, widget, cr):
+        # Scale the SVG background to fill the available area (no empty space)
+        try:
+            alloc = widget.get_allocation()
+            w = max(1, alloc.width)
+            h = max(1, alloc.height)
+            dim = self._bg_handle.get_dimensions()
+            sw = max(1, dim.width)
+            sh = max(1, dim.height)
+            sx = w / sw
+            sy = h / sh
+            cr.save()
+            cr.scale(sx, sy)
+            self._bg_handle.render_cairo(cr)
+            cr.restore()
+        except Exception:
+            pass
+        return False
+
     def quit(self):
         Gtk.main_quit()
 
@@ -291,7 +374,12 @@ class App:
             self.home_title.set_text("Подключён")
             self.home_sub.set_text(raw)
             self.current_iface = st.iface or self.current_iface
-            # Try to show ping for current city from fast table
+
+            # Button state
+            self.btn_connect.hide()
+            self.btn_disconnect.show()
+
+            # Ping/location
             ping = self._ping_for_location(st.location, fast_text)
             self.lbl_current_location.set_text(st.location if st.location else "—")
             self.lbl_current_ping.set_text(f"{ping} мс" if ping else "—")
@@ -300,6 +388,11 @@ class App:
         else:
             self.home_title.set_text("Отключён")
             self.home_sub.set_text(raw or "VPN отключён")
+
+            # Button state
+            self.btn_disconnect.hide()
+            self.btn_connect.show()
+
             self.lbl_current_location.set_text("—")
             self.lbl_current_ping.set_text("—")
             self.connected_since = None
@@ -343,6 +436,39 @@ class App:
             self.info("Выбери локацию справа или нажми «Самая быстрая».", err=True)
             return
         self.connect_location(loc)
+
+    # Only the "Подключить" button uses pkexec so the user gets a GUI password prompt.
+    # This keeps the rest of the mechanics unchanged.
+    def connect_selected_pkexec(self):
+        loc = self._selected_location()
+        if not loc:
+            self.info("Выбери локацию справа или нажми «Самая быстрая».", err=True)
+            return
+        self.info(f"Подключаюсь к {loc}…")
+        run_bg(lambda: self._pkexec_connect_location(loc),
+               lambda out: (self.info(out or "Подключено"), self.refresh_all()),
+               lambda e: self.info(f"Ошибка: {e}", err=True))
+
+    def _pkexec_connect_location(self, loc: str) -> str:
+        import os, subprocess
+        env = os.environ.copy()
+        cmd = ["pkexec", "env"]
+
+        # pkexec очищает окружение, поэтому явно пробрасываем DISPLAY/XAUTHORITY и PATH.
+        if env.get("DISPLAY"):
+            cmd.append(f"DISPLAY={env['DISPLAY']}")
+        if env.get("XAUTHORITY"):
+            cmd.append(f"XAUTHORITY={env['XAUTHORITY']}")
+        if env.get("PATH"):
+            cmd.append(f"PATH={env['PATH']}")
+
+        cmd += ["adguardvpn-cli", "connect", "-l", str(loc), "-y"]
+        p = subprocess.run(cmd, capture_output=True, text=True)
+        out = (p.stdout or "").strip()
+        err = (p.stderr or "").strip()
+        if p.returncode != 0:
+            raise RuntimeError(err or out or f"pkexec failed (code {p.returncode})")
+        return out
 
     def connect_location(self, loc: str):
         self.info(f"Подключаюсь к {loc}…")
