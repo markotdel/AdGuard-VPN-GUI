@@ -7,7 +7,7 @@
 
 ## Установка (одна команда)
 ```bash
-unzip adguardvpn-gui_v0.3.3.1.zip
+unzip adguardvpn-gui_v_._._._.zip ## Номер версии например v0.3.3.19.zip
 cd adguardvpn-gui
 bash install.sh
 ```
@@ -42,7 +42,7 @@ It is **not affiliated with or endorsed by AdGuard**. Use at your own risk.
 
 ## Installation (one command)
 ```bash
-unzip adguardvpn-gui_v0.3.3.3_github.zip
+unzip adguardvpn-gui_v_._._._.zip ## Номер версии например v0.3.3.19.zip
 cd adguardvpn-gui
 bash install.sh
 ```
