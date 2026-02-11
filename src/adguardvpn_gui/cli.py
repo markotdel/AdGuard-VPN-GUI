@@ -20,7 +20,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 _REAL_CLI = Path("/opt/adguardvpn_cli/adguardvpn-cli")
-CLI = "adguardvpn-cli"
+# Prefer the real binary if it exists. Some wrappers named "adguardvpn-cli"
+# may internally invoke sudo/askpass and cause auth loops.
+CLI = str(_REAL_CLI) if _REAL_CLI.exists() else "adguardvpn-cli"
 
 class CliError(RuntimeError):
     pass
@@ -69,6 +71,9 @@ def list_locations(count: int|None=None) -> str:
 def connect_fastest() -> str: return run(["connect","--fastest","-y"], timeout=90)
 def connect_location(loc: str) -> str: return run(["connect","-l",loc,"-y"], timeout=90)
 def disconnect() -> str: return run(["disconnect"], timeout=30)
+
+def disconnect_pw(password: str) -> str:
+    return _run_sudo(password, ["disconnect"], timeout=60)
 
 def config_show() -> str: return run(["config","show"], timeout=30)
 def config_set_mode(v: str) -> str: return run(["config","set-mode",v], timeout=30)

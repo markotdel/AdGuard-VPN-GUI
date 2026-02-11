@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 import threading, time, re
+import os, sys
+import fcntl
 import signal
 from pathlib import Path
 from datetime import date
@@ -45,12 +47,13 @@ import cairo
 from . import cli, __version__
 from .tray import Tray
 from .utils import human_bytes
-from .state import load_stats, save_stats, today_key
+from .state import load_stats, save_stats, today_key, load_config, save_config
 
 UI = Path(__file__).resolve().parent / "ui" / "main_window.ui"
 CSS = Path(__file__).resolve().parent / "ui" / "style.css"
 BG = Path(__file__).resolve().parent / "ui" / "assets" / "home_bg.svg"
-ICON = str((Path(__file__).resolve().parent / "ui" / "icons" / "adguardvpn.svg"))
+ICON_CONNECTED = str((Path(__file__).resolve().parent / "ui" / "icons" / "adguardvpn.svg"))
+ICON_DISCONNECTED = str((Path(__file__).resolve().parent / "ui" / "icons" / "disconnected_stop.svg"))
 
 def run_bg(fn, ok, err):
     def _t():
@@ -89,6 +92,7 @@ def iface_bytes(iface: str):
 
 class App:
     def __init__(self):
+        self.cfg = load_config()
         self.b = Gtk.Builder.new_from_file(str(UI))
         self.win: Gtk.Window = self.b.get_object("main_window")
         self.win.set_default_size(1280, 720)
@@ -161,6 +165,10 @@ class App:
         self.cmb_update_channel: Gtk.ComboBoxText = self.b.get_object("cmb_update_channel")
         self.sw_debug: Gtk.Switch = self.b.get_object("sw_debug")
         self.sw_notify: Gtk.Switch = self.b.get_object("sw_notify")
+        # App preferences (GUI-only)
+        self.sw_remember_last_loc: Gtk.Switch = self.b.get_object("sw_remember_last_loc")
+        self.sw_sudo_pwd: Gtk.Switch = self.b.get_object("sw_sudo_pwd")
+        self.ent_sudo_pwd: Gtk.Entry = self.b.get_object("ent_sudo_pwd")
         self.btn_settings_reload: Gtk.Button = self.b.get_object("btn_settings_reload")
         self.btn_settings_apply: Gtk.Button = self.b.get_object("btn_settings_apply")
         self.lbl_settings_out: Gtk.Label = self.b.get_object("lbl_settings_out")
@@ -188,8 +196,22 @@ class App:
         self.btn_settings_reload.connect("clicked", lambda *_: self.settings_reload())
         self.btn_settings_apply.connect("clicked", lambda *_: self.settings_apply())
 
+        # Apply persisted app-only settings to UI
+        self._load_app_prefs_to_ui()
+
+        # Persist app-only settings on change
+        self.sw_remember_last_loc.connect("notify::active", lambda *_: self._save_app_prefs_from_ui())
+        self.sw_sudo_pwd.connect("notify::active", lambda *_: self._on_sudo_toggle())
+        self.ent_sudo_pwd.connect("changed", lambda *_: self._on_sudo_entry_changed())
+
         # Tray
-        self.tray = Tray(ICON, self.show, self.connect_fastest, self.disconnect, self.quit)
+        # Tray "Выход" должен отключать VPN и затем закрывать приложение.
+        self.tray = Tray(ICON_CONNECTED, ICON_DISCONNECTED, self.show, self.connect_fastest, self.disconnect, self.quit_from_tray)
+
+        # Periodically poll VPN status so tray icon / кнопки синхронизируются
+        # даже если пользователь подключается/отключается через терминал.
+        self._poll_inflight = False
+        GLib.timeout_add_seconds(3, self._poll_status)
 
         self.current_iface = "tun0"
         self.connected_since = None
@@ -197,7 +219,14 @@ class App:
         self._last_tx = None
         GLib.timeout_add(1000, self._tick_stats)
 
+        # One-time apply last-location selection after the first locations load.
+        self._startup_loc_applied = False
+
         self.refresh_all()
+
+        # Keep UI + tray icon in sync with CLI actions done outside the GUI
+        # (e.g., user runs adguardvpn-cli in terminal).
+        GLib.timeout_add_seconds(2, self._poll_status)
 
     def _apply_css(self):
         prov = Gtk.CssProvider()
@@ -314,6 +343,14 @@ class App:
 
 
     def _ask_sudo_password(self) -> str|None:
+        # If user opted in to storing the password, use it.
+        try:
+            self.cfg = load_config()
+            if self.cfg.get("sudo_password_enabled") and (self.cfg.get("sudo_password") or "").strip():
+                return str(self.cfg.get("sudo_password")).strip()
+        except Exception:
+            pass
+
         dlg = Gtk.Dialog(title="Введите пароль sudo", parent=self.win, flags=0)
         dlg.add_button("Отмена", Gtk.ResponseType.CANCEL)
         dlg.add_button("OK", Gtk.ResponseType.OK)
@@ -324,6 +361,7 @@ class App:
         entry = Gtk.Entry()
         entry.set_visibility(False)
         entry.set_invisible_char("•")
+        entry.set_placeholder_text("Пароль sudo")
         entry.set_activates_default(True)
         dlg.set_default_response(Gtk.ResponseType.OK)
         box.add(lbl)
@@ -367,6 +405,51 @@ class App:
     def quit(self):
         Gtk.main_quit()
 
+    def quit_from_tray(self):
+        """Tray menu -> Exit: disconnect VPN then quit."""
+        # Avoid double-trigger
+        if getattr(self, "_quitting", False):
+            return
+        self._quitting = True
+
+        def _do_quit(_=None):
+            Gtk.main_quit()
+
+        # Best-effort disconnect; even if it fails (or user cancels auth), we still quit.
+        pwd = self._ask_sudo_password()
+        if not pwd:
+            run_bg(lambda: cli.disconnect(), lambda *_: _do_quit(), lambda *_: _do_quit())
+            return
+        run_bg(lambda: cli.disconnect_pw(pwd), lambda *_: _do_quit(), lambda *_: _do_quit())
+
+    def _poll_status(self):
+        """Lightweight status sync for tray/icon/buttons."""
+        if getattr(self, "_quitting", False):
+            return False
+        if self._poll_inflight:
+            return True
+        self._poll_inflight = True
+
+        def _bg():
+            return cli.status()
+
+        def _ok(st_text: str):
+            self._poll_inflight = False
+            try:
+                st = cli.parse_status(st_text)
+                # Reuse last known fast locations text for ping label if any.
+                fast_text = getattr(self, "_last_fast_text", "")
+                self._render_status(st, st_text, fast_text)
+            except Exception:
+                pass
+
+        def _err(_e: Exception):
+            self._poll_inflight = False
+        run_bg(_bg, _ok, _err)
+        return True
+
+    # (removed duplicated quit_from_tray/_poll_status definitions)
+
     def on_close_to_tray(self, *_):
         self.win.hide()
         return True
@@ -379,6 +462,8 @@ class App:
 
     def _on_refresh_ok(self, res):
         st_text, fast_text, all_text, mode_text, excl_text, cfg_text = res
+        # Keep last known fastest list for ping lookup in lightweight status polls.
+        self._last_fast_text = fast_text
         st = cli.parse_status(st_text)
         self._render_status(st, st_text, fast_text)
         self._render_locations(fast_text, all_text)
@@ -391,6 +476,11 @@ class App:
         self.info(f"Ошибка: {e}", err=True)
 
     def _render_status(self, st: cli.VpnStatus, raw: str, fast_text: str):
+        # Keep tray icon in sync with VPN state
+        try:
+            self.tray.set_connected(bool(st.connected))
+        except Exception:
+            pass
         if st.connected:
             self.home_title.set_text("Подключён")
             self.home_sub.set_text(raw)
@@ -404,6 +494,15 @@ class App:
             ping = self._ping_for_location(st.location, fast_text)
             self.lbl_current_location.set_text(st.location if st.location else "—")
             self.lbl_current_ping.set_text(f"{ping} мс" if ping else "—")
+
+            # Remember last connected location if enabled
+            try:
+                self.cfg = load_config()
+                if self.cfg.get("remember_last_location") and st.location:
+                    self.cfg["last_location"] = st.location
+                    save_config(self.cfg)
+            except Exception:
+                pass
             if self.connected_since is None:
                 self.connected_since = time.time()
         else:
@@ -436,6 +535,18 @@ class App:
             self.store_all.append(list(row))
         self.store_all_filtered.refilter()
 
+        # Apply last location selection once, after the first locations load.
+        if not self._startup_loc_applied:
+            self._startup_loc_applied = True
+            try:
+                self.cfg = load_config()
+                if self.cfg.get("remember_last_location"):
+                    loc = (self.cfg.get("last_location") or "").strip()
+                    if loc:
+                        self._select_location_in_lists(loc)
+            except Exception:
+                pass
+
     def on_row_activated(self, tv, path, col):
         model = tv.get_model()
         it = model.get_iter(path)
@@ -450,6 +561,31 @@ class App:
                 iso,country,city,ping = model[it]
                 return city or iso
         return ""
+
+    def _select_location_in_lists(self, loc: str):
+        target = (loc or "").strip().lower()
+        if not target:
+            return
+
+        def _select_one(tv: Gtk.TreeView):
+            model = tv.get_model()
+            it = model.get_iter_first() if model else None
+            idx = 0
+            while it is not None:
+                iso, country, city, ping = model[it]
+                val = (city or iso or "").strip().lower()
+                if val == target:
+                    path = Gtk.TreePath(idx)
+                    tv.get_selection().select_path(path)
+                    tv.scroll_to_cell(path, None, True, 0.5, 0.0)
+                    return True
+                idx += 1
+                it = model.iter_next(it)
+            return False
+
+        # Prefer full list, fallback to fast list.
+        if not _select_one(self.tv_all):
+            _select_one(self.tv_fast)
 
     def connect_selected(self):
         loc = self._selected_location()
@@ -478,8 +614,12 @@ class App:
                lambda e: self.info(f"Ошибка: {e}", err=True))
 
     def disconnect(self):
+        pwd = self._ask_sudo_password()
+        if not pwd:
+            self.info("Отменено", err=True)
+            return
         self.info("Отключаю…")
-        run_bg(lambda: cli.disconnect(),
+        run_bg(lambda: cli.disconnect_pw(pwd),
                lambda out: (self.info(out or "Отключено"), self.refresh_all()),
                lambda e: self.info(f"Ошибка: {e}", err=True))
 
@@ -563,6 +703,58 @@ class App:
         self.sw_notify.set_active("on" in cfg.get("show notifications","").lower())
         self.lbl_settings_out.set_text("Загружено из CLI.")
 
+    # App-only preferences (persisted in ~/.local/share/adguardvpn-gui/config.json)
+    def _load_app_prefs_to_ui(self):
+        try:
+            self.cfg = load_config()
+        except Exception:
+            self.cfg = {}
+
+        remember = bool(self.cfg.get("remember_last_location", True))
+        self.sw_remember_last_loc.set_active(remember)
+
+        sudo_enabled = bool(self.cfg.get("sudo_password_enabled", False)) and bool((self.cfg.get("sudo_password") or "").strip())
+        self.sw_sudo_pwd.set_active(sudo_enabled)
+        self.ent_sudo_pwd.set_text(str(self.cfg.get("sudo_password") or ""))
+        self.ent_sudo_pwd.set_sensitive(sudo_enabled)
+
+    def _save_app_prefs_from_ui(self):
+        self.cfg = load_config()
+        self.cfg["remember_last_location"] = bool(self.sw_remember_last_loc.get_active())
+
+        pwd = (self.ent_sudo_pwd.get_text() or "").strip()
+        enabled = bool(self.sw_sudo_pwd.get_active()) and bool(pwd)
+        self.cfg["sudo_password_enabled"] = enabled
+        self.cfg["sudo_password"] = pwd if enabled else ""
+
+        save_config(self.cfg)
+
+    def _on_sudo_toggle(self):
+        # Enable/disable password field; if user enables but field empty -> keep disabled.
+        pwd = (self.ent_sudo_pwd.get_text() or "").strip()
+        if self.sw_sudo_pwd.get_active() and not pwd:
+            self.ent_sudo_pwd.set_sensitive(True)
+            self.ent_sudo_pwd.grab_focus()
+            # don't persist "enabled" until we have a password
+            self.cfg = load_config()
+            self.cfg["sudo_password_enabled"] = False
+            save_config(self.cfg)
+            return
+        self.ent_sudo_pwd.set_sensitive(self.sw_sudo_pwd.get_active())
+        self._save_app_prefs_from_ui()
+
+    def _on_sudo_entry_changed(self):
+        pwd = (self.ent_sudo_pwd.get_text() or "").strip()
+        if not pwd:
+            # Empty password => switch must be off.
+            if self.sw_sudo_pwd.get_active():
+                self.sw_sudo_pwd.set_active(False)
+            self.ent_sudo_pwd.set_sensitive(False)
+        else:
+            if self.sw_sudo_pwd.get_active():
+                self.ent_sudo_pwd.set_sensitive(True)
+        self._save_app_prefs_from_ui()
+
     def settings_reload(self):
         self.lbl_settings_out.set_text("Читаю…")
         run_bg(lambda: cli.config_show(),
@@ -635,6 +827,38 @@ def main():
         signal.signal(signal.SIGINT, signal.SIG_IGN)
     except Exception:
         pass
+
+    # Single-instance guard: if already running, show a warning and exit.
+    lock_dir = Path.home() / ".local" / "share" / "adguardvpn-gui"
+    try:
+        lock_dir.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+    lock_path = lock_dir / "app.lock"
+    try:
+        lock_f = open(lock_path, "w")
+        fcntl.flock(lock_f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        lock_f.write(str(os.getpid()))
+        lock_f.flush()
+        # keep handle alive for duration of process
+        globals()["_SINGLE_INSTANCE_LOCK"] = lock_f
+    except Exception:
+        try:
+            Gtk.init([])
+            dlg = Gtk.MessageDialog(
+                parent=None,
+                flags=0,
+                message_type=Gtk.MessageType.WARNING,
+                buttons=Gtk.ButtonsType.OK,
+                text="AdGuard VPN-GUI уже запущен.",
+            )
+            dlg.format_secondary_text("Проверь трей: иконка уже работает.")
+            dlg.run()
+            dlg.destroy()
+        except Exception:
+            pass
+        return
+
     a = App()
     a.show()
     Gtk.main()
