@@ -4,8 +4,6 @@ from __future__ import annotations
 import subprocess, re
 
 import os
-import shutil
-from pathlib import Path
 
 _ANSI_RE = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
 
@@ -19,10 +17,10 @@ def _clean_output(s: str) -> str:
 
 from dataclasses import dataclass
 
-# Prefer the real upstream binary if installed. Wrapper scripts found in PATH
-# may spawn sudo/askpass, which breaks GUI flows and user-level licensing.
+from pathlib import Path
+
 _REAL_CLI = Path("/opt/adguardvpn_cli/adguardvpn-cli")
-CLI = str(_REAL_CLI) if _REAL_CLI.exists() else "adguardvpn-cli"
+CLI = "adguardvpn-cli"
 
 class CliError(RuntimeError):
     pass
@@ -36,14 +34,18 @@ def run(args: list[str], timeout: int = 30) -> str:
     return out
 
 
+
+def _sudo_cli() -> str:
+    return str(_REAL_CLI) if _REAL_CLI.exists() else CLI
+
 def _run_sudo(password: str, args: list[str], timeout: int = 90) -> str:
-    # Run AdGuard VPN CLI as root via sudo, but preserve user's HOME/DBUS/DISPLAY so license/state stays in user profile.
+    # Run CLI via sudo -S with preserved GUI/user env so license remains user-scoped.
     env_parts = []
     for k in ["HOME","USER","LOGNAME","XDG_RUNTIME_DIR","DBUS_SESSION_BUS_ADDRESS","DISPLAY","XAUTHORITY"]:
         v = os.environ.get(k)
         if v:
             env_parts.append(f"{k}={v}")
-    cmd = ["sudo", "-S", "-p", ""] + (["env"] + env_parts if env_parts else []) + [CLI] + args
+    cmd = ["sudo", "-S", "-p", ""] + (["env"] + env_parts if env_parts else []) + [_sudo_cli()] + args
     p = subprocess.run(cmd, input=(password or "") + "\n", capture_output=True, text=True, timeout=timeout)
     out = _clean_output(p.stdout or "")
     err = _clean_output(p.stderr or "")
@@ -51,120 +53,22 @@ def _run_sudo(password: str, args: list[str], timeout: int = 90) -> str:
         raise CliError(err or out or f"CLI error: {p.returncode}")
     return out
 
+
 def connect_location_pw(loc: str, password: str) -> str:
     return _run_sudo(password, ["connect", "-l", loc, "-y"], timeout=120)
 
+
 def connect_fastest_pw(password: str) -> str:
     return _run_sudo(password, ["connect", "--fastest", "-y"], timeout=120)
+
 
 def status() -> str: return run(["status"], timeout=15)
 def list_locations(count: int|None=None) -> str:
     return run(["list-locations"] + ([] if count is None else [str(count)]), timeout=60)
 
-def _pkexec_env() -> list[str]:
-    """Build pkexec env preserving current GUI session and user HOME.
-
-    AdGuard VPN CLI may try to call sudo when it needs privileges, which
-    fails from GUI without a terminal. Running the connect command via
-    pkexec avoids that.
-
-    We must keep HOME/XDG/DBUS of the current user so the CLI can access
-    the user's license/token.
-    """
-
-    uid = os.getuid()
-    home = os.environ.get("HOME", str(Path.home()))
-    display = os.environ.get("DISPLAY", ":0")
-    xdg_runtime = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{uid}")
-    dbus = os.environ.get("DBUS_SESSION_BUS_ADDRESS", f"unix:path={xdg_runtime}/bus")
-    user = os.environ.get("USER", "")
-    logname = os.environ.get("LOGNAME", user)
-    return [
-        f"HOME={home}",
-        f"USER={user}",
-        f"LOGNAME={logname}",
-        f"DISPLAY={display}",
-        f"XDG_RUNTIME_DIR={xdg_runtime}",
-        f"DBUS_SESSION_BUS_ADDRESS={dbus}",
-    ]
-
-
-def _run_pkexec(args: list[str], timeout: int = 90) -> str:
-    cli_path = _cli_realpath()
-    cmd = ["pkexec", _which("env"), *_pkexec_env(), cli_path, *args]
-    p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-    out = _clean_output(p.stdout or "")
-    err = _clean_output(p.stderr or "")
-    if p.returncode != 0:
-        raise CliError(err or out or f"CLI error: {p.returncode}")
-    return out
-
-
-def connect_fastest() -> str:
-    # run via pkexec so CLI doesn't try to spawn sudo/askpass
-    return _run_pkexec(["connect", "--fastest", "-y"], timeout=90)
-
-
-def connect_location(loc: str) -> str:
-    return _run_pkexec(["connect", "-l", loc, "-y"], timeout=90)
+def connect_fastest() -> str: return run(["connect","--fastest","-y"], timeout=90)
+def connect_location(loc: str) -> str: return run(["connect","-l",loc,"-y"], timeout=90)
 def disconnect() -> str: return run(["disconnect"], timeout=30)
-
-
-def _which(name: str) -> str:
-    p = shutil.which(name)
-    return p or name
-
-
-def _cli_realpath() -> str:
-    # Resolve adguardvpn-cli (symlinks included). If a wrapper script is found,
-    # fall back to the real ELF binary in /opt.
-    if Path(CLI).is_absolute():
-        return str(Path(CLI).resolve())
-    p = shutil.which(CLI)
-    if not p:
-        return CLI
-    rp = Path(p).resolve()
-    try:
-        with open(rp, "rb") as f:
-            head = f.read(4)
-        if head != b"\x7fELF" and _REAL_CLI.exists():
-            return str(_REAL_CLI)
-    except Exception:
-        if _REAL_CLI.exists():
-            return str(_REAL_CLI)
-    return str(rp)
-
-
-def ensure_caps_for_connect() -> None:
-    """Ensure adguardvpn-cli can start TUN without sudo.
-
-    The upstream CLI may try to spawn sudo/askpass when lacking privileges.
-    We grant required Linux capabilities to the CLI binary via pkexec+setcap,
-    then run CLI as the current user (so license/keyring remain accessible).
-    """
-
-    cli_path = _cli_realpath()
-
-    getcap = _which("getcap")
-    try:
-        p = subprocess.run([getcap, cli_path], capture_output=True, text=True)
-        out = (p.stdout or "") + (p.stderr or "")
-        if "cap_net_admin" in out:
-            return
-    except Exception:
-        # If getcap is missing or fails, we still attempt setcap.
-        pass
-
-    setcap = _which("setcap")
-    # Minimal set needed for TUN + raw sockets; bind_service is harmless if unused.
-    caps = "cap_net_admin,cap_net_raw,cap_net_bind_service+ep"
-
-    # pkexec will show a GUI password prompt via polkit
-    p = subprocess.run(["pkexec", setcap, caps, cli_path], capture_output=True, text=True)
-    if p.returncode != 0:
-        err = _clean_output((p.stderr or "") + "\n" + (p.stdout or ""))
-        raise CliError(err or "Не удалось выдать права (setcap).")
-
 
 def config_show() -> str: return run(["config","show"], timeout=30)
 def config_set_mode(v: str) -> str: return run(["config","set-mode",v], timeout=30)

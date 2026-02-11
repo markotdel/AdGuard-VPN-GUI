@@ -312,6 +312,7 @@ class App:
         self.infobar.set_visible(True)
         GLib.timeout_add(3500, self._hide_infobar)
 
+
     def _ask_sudo_password(self) -> str|None:
         dlg = Gtk.Dialog(title="Введите пароль sudo", parent=self.win, flags=0)
         dlg.add_button("Отмена", Gtk.ResponseType.CANCEL)
@@ -334,7 +335,6 @@ class App:
         if pwd is not None:
             pwd = pwd.strip()
         return pwd or None
-
 
     def _hide_infobar(self):
         self.infobar.set_visible(False)
@@ -456,25 +456,24 @@ class App:
         if not loc:
             self.info("Выбери локацию справа или нажми «Самая быстрая».", err=True)
             return
-        self.connect_location(loc)
-
-    def connect_location(self, loc: str):
-        self.info(f"Подключаюсь к {loc}…")
         pwd = self._ask_sudo_password()
         if not pwd:
             self.info("Отменено", err=True)
             return
+        self.info(f"Подключаюсь к {loc}…")
         run_bg(lambda: cli.connect_location_pw(loc, pwd),
+               lambda out: (self.info(out or "Подключено"), self.refresh_all()),
+               lambda e: self.info(f"Ошибка: {e}", err=True))
+
+    def connect_location(self, loc: str):
+        self.info(f"Подключаюсь к {loc}…")
+        run_bg(lambda: cli.connect_location(loc),
                lambda out: (self.info(out or "Подключено"), self.refresh_all()),
                lambda e: self.info(f"Ошибка: {e}", err=True))
 
     def connect_fastest(self):
         self.info("Подключаюсь к самой быстрой…")
-        pwd = self._ask_sudo_password()
-        if not pwd:
-            self.info("Отменено", err=True)
-            return
-        run_bg(lambda: cli.connect_fastest_pw(pwd),
+        run_bg(lambda: cli.connect_fastest(),
                lambda out: (self.info(out or "Подключено"), self.refresh_all()),
                lambda e: self.info(f"Ошибка: {e}", err=True))
 
