@@ -55,6 +55,121 @@ BG = Path(__file__).resolve().parent / "ui" / "assets" / "home_bg.svg"
 ICON_CONNECTED = str((Path(__file__).resolve().parent / "ui" / "icons" / "adguardvpn.svg"))
 ICON_DISCONNECTED = str((Path(__file__).resolve().parent / "ui" / "icons" / "disconnected_stop.svg"))
 
+# --- lightweight localization for country/city display (keeps CLI codes intact) ---
+COUNTRY_RU = {
+    "US": "США",
+    "GB": "Великобритания",
+    "DE": "Германия",
+    "FR": "Франция",
+    "IT": "Италия",
+    "ES": "Испания",
+    "SE": "Швеция",
+    "DK": "Дания",
+    "EE": "Эстония",
+    "LT": "Литва",
+    "LV": "Латвия",
+    "CH": "Швейцария",
+    "AT": "Австрия",
+    "BE": "Бельгия",
+    "NL": "Нидерланды",
+    "IE": "Ирландия",
+    "PL": "Польша",
+    "CZ": "Чехия",
+    "NO": "Норвегия",
+    "FI": "Финляндия",
+    "IS": "Исландия",
+    "RU": "Россия",
+    "MD": "Молдова",
+    "PT": "Португалия",
+    "IL": "Израиль",
+    "EG": "Египет",
+    "HU": "Венгрия",
+    "RS": "Сербия",
+    "BG": "Болгария",
+    "CY": "Кипр",
+    "IR": "Иран",
+}
+
+CITY_RU = {
+    # frequent
+    "New York": "Нью-Йорк",
+    "Stockholm": "Стокгольм",
+    "Copenhagen": "Копенгаген",
+    "Tallinn": "Таллин",
+    "Vilnius": "Вильнюс",
+    "Zurich": "Цюрих",
+    "Riga": "Рига",
+    "Chisinau": "Кишинёв",
+    "London": "Лондон",
+    "Berlin": "Берлин",
+    "Frankfurt": "Франкфурт",
+    "Vienna": "Вена",
+    "Prague": "Прага",
+    "Dublin": "Дублин",
+    "Warsaw": "Варшава",
+    "Amsterdam": "Амстердам",
+    "Brussels": "Брюссель",
+    "Oslo": "Осло",
+    "Helsinki": "Хельсинки",
+    "Reykjavik": "Рейкьявик",
+    "Moscow": "Москва",
+    "Moscow(Virtual)": "Москва (Virtual)",
+}
+
+_TR_BASIC = (
+    ("shch", "щ"), ("sch", "щ"),
+    ("yo", "ё"), ("yu", "ю"), ("ya", "я"),
+    ("zh", "ж"), ("kh", "х"), ("ts", "ц"),
+    ("ch", "ч"), ("sh", "ш"),
+)
+_TR_CHARS = {
+    "a": "а", "b": "б", "c": "к", "d": "д", "e": "е", "f": "ф", "g": "г", "h": "х",
+    "i": "и", "j": "дж", "k": "к", "l": "л", "m": "м", "n": "н", "o": "о", "p": "п",
+    "q": "к", "r": "р", "s": "с", "t": "т", "u": "у", "v": "в", "w": "в", "x": "кс",
+    "y": "й", "z": "з",
+}
+
+
+def _latin_to_ru(text: str) -> str:
+    """Very small transliteration helper for city names.
+
+    It's not perfect (and can't be without a full dictionary), but keeps UI consistent.
+    """
+    if not text:
+        return text
+    # keep parentheses part intact
+    s = text
+    # handle hyphenated names
+    parts = re.split(r"(\s+|-)" , s)
+    out_parts = []
+    for p in parts:
+        if p.isspace() or p == "-":
+            out_parts.append(p)
+            continue
+        low = p.lower()
+        # quick substitutions
+        for src, dst in _TR_BASIC:
+            low = low.replace(src, dst)
+        buf = []
+        i = 0
+        while i < len(low):
+            ch = low[i]
+            if ch in "щёжюяцчш":
+                buf.append(ch)
+                i += 1
+                continue
+            if ch in _TR_CHARS:
+                buf.append(_TR_CHARS[ch])
+            else:
+                buf.append(ch)
+            i += 1
+        # Capitalize first letter
+        word = "".join(buf)
+        if word:
+            word = word[0].upper() + word[1:]
+        out_parts.append(word)
+    return "".join(out_parts)
+
 def run_bg(fn, ok, err):
     def _t():
         try:
@@ -125,6 +240,8 @@ class App:
         self.entry_search: Gtk.SearchEntry = self.b.get_object("entry_search")
         self.lbl_current_location: Gtk.Label = self.b.get_object("lbl_current_location")
         self.lbl_current_ping: Gtk.Label = self.b.get_object("lbl_current_ping")
+        self.lbl_country_city: Gtk.Label = self.b.get_object("lbl_country_city")
+        self.lbl_license: Gtk.Label = self.b.get_object("lbl_license")
         self.tv_fast: Gtk.TreeView = self.b.get_object("tv_fast")
         self.tv_all: Gtk.TreeView = self.b.get_object("tv_all")
 
@@ -169,6 +286,9 @@ class App:
         self.sw_remember_last_loc: Gtk.Switch = self.b.get_object("sw_remember_last_loc")
         self.sw_sudo_pwd: Gtk.Switch = self.b.get_object("sw_sudo_pwd")
         self.ent_sudo_pwd: Gtk.Entry = self.b.get_object("ent_sudo_pwd")
+        self.cmb_lang: Gtk.ComboBoxText = self.b.get_object("cmb_lang")
+        self.scale_win_w: Gtk.Scale = self.b.get_object("scale_win_w")
+        self.scale_win_h: Gtk.Scale = self.b.get_object("scale_win_h")
         self.btn_settings_reload: Gtk.Button = self.b.get_object("btn_settings_reload")
         self.btn_settings_apply: Gtk.Button = self.b.get_object("btn_settings_apply")
         self.lbl_settings_out: Gtk.Label = self.b.get_object("lbl_settings_out")
@@ -177,8 +297,13 @@ class App:
         self._apply_home_styles()
         self._setup_models()
 
+        self._locations_text_cache = ""
+        self._license_text_cache = None
+        self._license_fetch_inflight = False
+        self._last_license_fetch = 0.0
+
         # Signals
-        self.btn_refresh_all.connect("clicked", lambda *_: self.refresh_all())
+        self.btn_refresh_all.connect("clicked", lambda *_: self._on_refresh_clicked())
         self.btn_fastest.connect("clicked", lambda *_: self.connect_fastest())
         self.btn_connect.connect("clicked", lambda *_: self.connect_selected())
         self.btn_disconnect.connect("clicked", lambda *_: self.disconnect())
@@ -198,11 +323,14 @@ class App:
 
         # Apply persisted app-only settings to UI
         self._load_app_prefs_to_ui()
+        self._apply_language()
+        self._apply_window_size()
 
         # Persist app-only settings on change
         self.sw_remember_last_loc.connect("notify::active", lambda *_: self._save_app_prefs_from_ui())
         self.sw_sudo_pwd.connect("notify::active", lambda *_: self._on_sudo_toggle())
         self.ent_sudo_pwd.connect("changed", lambda *_: self._on_sudo_entry_changed())
+        self.cmb_lang.connect("changed", lambda *_: self._on_lang_changed())
 
         # Tray
         # Tray "Выход" должен отключать VPN и затем закрывать приложение.
@@ -297,8 +425,9 @@ class App:
     def _setup_models(self):
         self.btn_disconnect.hide()
         # Locations
-        self.store_fast = Gtk.ListStore(str,str,str,int)
-        self.store_all = Gtk.ListStore(str,str,str,int)
+        # columns: iso, country_display, city_display, ping, city_real
+        self.store_fast = Gtk.ListStore(str, str, str, int, str)
+        self.store_all = Gtk.ListStore(str, str, str, int, str)
         self.store_all_filtered = self.store_all.filter_new()
         self.store_all_filtered.set_visible_func(self._filter_all)
 
@@ -332,7 +461,7 @@ class App:
         q = (self.entry_search.get_text() or "").strip().lower()
         if not q:
             return True
-        iso, country, city, ping = model[it]
+        iso, country, city, ping, _city_real = model[it]
         return q in (iso or "").lower() or q in (country or "").lower() or q in (city or "").lower()
 
     def info(self, msg: str, err=False):
@@ -454,6 +583,231 @@ class App:
         self.win.hide()
         return True
 
+
+    def _t(self, key: str) -> str:
+        lang = str(self.cfg.get("lang") or "ru")
+        tr = {
+            "ru": {
+                "btn_connect": "Подключить",
+                "btn_disconnect": "Отключить",
+                "status_connected_title": "Подключён",
+                "status_disconnected_title": "Отключён",
+                "status_connected_sub": "Подключено к {loc} (режим: {mode}, интерфейс: {iface})",
+                "status_disconnected_sub": "VPN отключён",
+                "country_city": "Страна: {country}   Город: {city}",
+                "country_city_unknown": "Страна: —   Город: —",
+                "license_prefix": "Лицензия: ",
+                "update_checking": "Проверяю обновления…",
+                "update_available": "Доступно обновление: {ver}. Нажмите «Обновить», чтобы установить.",
+                "update_none": "Обновлений нет.",
+                "update_failed": "Не удалось проверить обновления.",
+                "update_installing": "Скачиваю и устанавливаю обновление…",
+                "update_done": "Обновление установлено. Перезапустите программу.",
+                "settings_lang": "Язык:",
+            },
+            "en": {
+                "btn_connect": "Connect",
+                "btn_disconnect": "Disconnect",
+                "status_connected_title": "Connected",
+                "status_disconnected_title": "Disconnected",
+                "status_connected_sub": "Connected to {loc} (mode: {mode}, iface: {iface})",
+                "status_disconnected_sub": "VPN is disconnected",
+                "country_city": "Country: {country}   City: {city}",
+                "country_city_unknown": "Country: —   City: —",
+                "license_prefix": "License: ",
+                "update_checking": "Checking updates…",
+                "update_available": "Update available: {ver}. Click “Update” to install.",
+                "update_none": "No updates.",
+                "update_failed": "Update check failed.",
+                "update_installing": "Downloading and installing update…",
+                "update_done": "Update installed. Please restart the app.",
+                "settings_lang": "Language:",
+            },
+            "de": {
+                "btn_connect": "Verbinden",
+                "btn_disconnect": "Trennen",
+                "status_connected_title": "Verbunden",
+                "status_disconnected_title": "Getrennt",
+                "status_connected_sub": "Verbunden mit {loc} (Modus: {mode}, Schnittstelle: {iface})",
+                "status_disconnected_sub": "VPN ist getrennt",
+                "country_city": "Land: {country}   Stadt: {city}",
+                "country_city_unknown": "Land: —   Stadt: —",
+                "license_prefix": "Lizenz: ",
+                "update_checking": "Suche nach Updates…",
+                "update_available": "Update verfügbar: {ver}. Klicken Sie auf „Update“, um zu installieren.",
+                "update_none": "Keine Updates.",
+                "update_failed": "Update-Prüfung fehlgeschlagen.",
+                "update_installing": "Update wird heruntergeladen und installiert…",
+                "update_done": "Update installiert. Bitte App neu starten.",
+                "settings_lang": "Sprache:",
+            },
+        }
+        if lang not in tr:
+            lang = "ru"
+        return tr[lang].get(key, key)
+
+    def _localize_country_city(self, iso: str, country: str, city: str) -> tuple[str, str]:
+        """Localized display names for the current UI language."""
+        lang = str(self.cfg.get("lang") or "ru")
+        iso = (iso or "").strip().upper()
+        country_in = (country or "").strip()
+        city_in = (city or "").strip()
+
+        # English & German: show as-is
+        if lang in ("en", "de"):
+            return (country_in or iso, city_in)
+
+        # Russian
+        country_out = COUNTRY_RU.get(iso, country_in or iso)
+
+        # Try direct map first, then a lightweight transliteration
+        key = city_in
+        city_out = CITY_RU.get(key)
+        if city_out is None:
+            # status output often comes like "NEW YORK" – normalize to Title Case
+            norm = " ".join([w.capitalize() for w in key.replace("_", " ").split()])
+            city_out = CITY_RU.get(norm)
+        if city_out is None:
+            city_out = _latin_to_ru(city_in)
+        return (country_out, city_out)
+
+    def _apply_language(self):
+        # Buttons on the home card
+        try:
+            self.btn_connect.set_label(self._t("btn_connect"))
+            self.btn_disconnect.set_label(self._t("btn_disconnect"))
+        except Exception:
+            pass
+
+        # Settings label
+        try:
+            lbl = self.b.get_object("lbl_lang")
+            if lbl:
+                lbl.set_text(self._t("settings_lang"))
+        except Exception:
+            pass
+
+    def _apply_window_size(self):
+        """Force a stable window size (prevents GTK from auto-growing after Apply)."""
+        try:
+            w = int(self.cfg.get("window_width", 600) or 600)
+            h = int(self.cfg.get("window_height", 600) or 600)
+            w = max(400, min(1600, w))
+            h = max(400, min(1600, h))
+            self.win.set_default_size(w, h)
+            # resize() matters if the window is already realized
+            self.win.resize(w, h)
+        except Exception:
+            pass
+
+    def _kick_license_refresh(self):
+        import time
+        if self._license_fetch_inflight:
+            return
+        # refresh at most once per 60s
+        if time.time() - float(self._last_license_fetch or 0) < 60 and self._license_text_cache:
+            self.lbl_license.set_text(self._t("license_prefix") + self._license_text_cache)
+            return
+
+        self._license_fetch_inflight = True
+
+        def worker():
+            import time
+            try:
+                out = cli.license()
+                # keep it short: first non-empty 3 lines
+                lines = [ln.strip() for ln in (out or "").splitlines() if ln.strip()]
+                short = " | ".join(lines[:3]) if lines else "—"
+                # Localize common license phrases for UI (best-effort)
+                # Localize common license phrases for UI (best-effort)
+                lang = self.cfg.get('lang', 'ru')
+                if lang == 'ru' and short != '—':
+                    for a,b in [
+                        ('Logged in as', 'Вход выполнен как'),
+                        ('You are using the PREMIUM version', 'Премиум версия'),
+                        ('Up to ', 'До '),
+                        ('devices simultaneously', 'устройств одновременно'),
+                        ('Your subscription is valid until', 'Подписка действует до'),
+                    ]:
+                        short = short.replace(a, b)
+                elif lang == 'de' and short != '—':
+                    for a,b in [
+                        ('Logged in as', 'Angemeldet als'),
+                        ('You are using the PREMIUM version', 'PREMIUM-Version'),
+                        ('devices simultaneously', 'Geräte gleichzeitig'),
+                        ('Your subscription is valid until', 'Abo gültig bis'),
+                    ]:
+                        short = short.replace(a, b)
+                self._license_text_cache = short
+                self._last_license_fetch = time.time()
+                GLib.idle_add(self.lbl_license.set_text, self._t("license_prefix") + short)
+            except Exception:
+                GLib.idle_add(self.lbl_license.set_text, self._t("license_prefix") + "—")
+            finally:
+                self._license_fetch_inflight = False
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_refresh_clicked(self):
+        self.refresh_all()
+        self._check_app_updates_async()
+
+    def _check_app_updates_async(self):
+        # GitHub releases check (best-effort, async)
+        def worker():
+            try:
+                GLib.idle_add(self.set_info, self._t("update_checking"))
+                latest = self._get_latest_release_version()
+                if not latest:
+                    GLib.idle_add(self.set_info, self._t("update_failed"))
+                    return
+                if self._is_newer_version(latest, __version__):
+                    GLib.idle_add(self.set_info, self._t("update_available").format(ver=latest))
+                else:
+                    GLib.idle_add(self.set_info, self._t("update_none"))
+            except Exception:
+                GLib.idle_add(self.set_info, self._t("update_failed"))
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _get_latest_release_version(self) -> str | None:
+        import json, urllib.request
+        req = urllib.request.Request(
+            "https://api.github.com/repos/markotdel/AdGuard-VPN-GUI/releases/latest",
+            headers={"User-Agent": "adguardvpn-gui"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        tag = (data.get("tag_name") or data.get("name") or "").strip()
+        if tag.startswith("v"):
+            tag = tag[1:]
+        return tag or None
+
+    def _is_newer_version(self, a: str, b: str) -> bool:
+        def norm(v: str):
+            parts = [p for p in v.split(".") if p.isdigit() or p.isnumeric()]
+            nums = []
+            for p in v.split("."):
+                try:
+                    nums.append(int(re.sub(r"[^0-9]", "", p) or "0"))
+                except Exception:
+                    nums.append(0)
+            return nums + [0] * (4 - len(nums))
+        na = norm(a)
+        nb = norm(b)
+        return na > nb
+    def _set_settings_out(self, msg: str) -> None:
+        """Prevent settings output from exploding window size on some GTK themes."""
+        if msg is None:
+            msg = ""
+        # Collapse newlines and trim
+        s = ' '.join(str(msg).split())
+        if len(s) > 260:
+            s = s[:260] + '…'
+        self.lbl_settings_out.set_text(s)
+
+
+
+
     def refresh_all(self):
         self.info("Обновляю…")
         run_bg(lambda: (cli.status(), cli.list_locations(10), cli.list_locations(), cli.exclusions_mode_get(), cli.exclusions_show(), cli.config_show()),
@@ -462,6 +816,7 @@ class App:
 
     def _on_refresh_ok(self, res):
         st_text, fast_text, all_text, mode_text, excl_text, cfg_text = res
+        self._locations_text_cache = all_text or ""
         # Keep last known fastest list for ping lookup in lightweight status polls.
         self._last_fast_text = fast_text
         st = cli.parse_status(st_text)
@@ -476,46 +831,76 @@ class App:
         self.info(f"Ошибка: {e}", err=True)
 
     def _render_status(self, st: cli.VpnStatus, raw: str, fast_text: str):
-        # Keep tray icon in sync with VPN state
+        # Remember last known state for UI handlers (e.g. double-click on a location)
+        self._last_connected = bool(getattr(st, "connected", False))
+
+        # buttons & title
+        if st.connected:
+            self.home_title.set_text(self._t("status_connected_title"))
+            self.btn_connect.hide()
+            self.btn_disconnect.show()
+        else:
+            self.home_title.set_text(self._t("status_disconnected_title"))
+            self.btn_disconnect.hide()
+            self.btn_connect.show()
+
+        # Tray icon must follow actual connection state (also when user runs CLI manually)
         try:
             self.tray.set_connected(bool(st.connected))
         except Exception:
             pass
+
+        # subtitle (localized, not raw CLI text)
         if st.connected:
-            self.home_title.set_text("Подключён")
-            self.home_sub.set_text(raw)
-            self.current_iface = st.iface or self.current_iface
-
-            # Button state
-            self.btn_connect.hide()
-            self.btn_disconnect.show()
-
-            # Ping/location
-            ping = self._ping_for_location(st.location, fast_text)
-            self.lbl_current_location.set_text(st.location if st.location else "—")
-            self.lbl_current_ping.set_text(f"{ping} мс" if ping else "—")
-
-            # Remember last connected location if enabled
-            try:
-                self.cfg = load_config()
-                if self.cfg.get("remember_last_location") and st.location:
-                    self.cfg["last_location"] = st.location
-                    save_config(self.cfg)
-            except Exception:
-                pass
-            if self.connected_since is None:
-                self.connected_since = time.time()
+            loc_raw = st.location or ""
+            mode = st.mode or "—"
+            iface = st.iface or "—"
+            # try to localize location display
+            _c, loc_disp = self._country_city_for_location(loc_raw, fast_text)
+            if not loc_disp:
+                _c, loc_disp = self._country_city_for_location(loc_raw, self._locations_text_cache or "")
+            loc_disp = (loc_disp or loc_raw or "—")
+            self.home_sub.set_text(self._t("status_connected_sub").format(loc=loc_disp, mode=mode, iface=iface))
         else:
-            self.home_title.set_text("Отключён")
-            self.home_sub.set_text(raw or "VPN отключён")
+            self.home_sub.set_text(self._t("status_disconnected_sub"))
 
-            # Button state
-            self.btn_disconnect.hide()
-            self.btn_connect.show()
-
+        # Current location label on the card (kept)
+        # Current location label on the card (localized)
+        if st.connected:
+            self.lbl_current_location.set_text((loc_disp or "—").upper())
+        else:
             self.lbl_current_location.set_text("—")
+
+        # Country / City line
+        country, city = self._country_city_for_location(st.location or "", fast_text)
+        if not country:
+            # fallback: try full locations list
+            country, city = self._country_city_for_location(st.location or "", self._locations_text_cache or "")
+        if country and city:
+            self.lbl_country_city.set_text(self._t("country_city").format(country=country, city=city))
+        else:
+            self.lbl_country_city.set_text(self._t("country_city_unknown"))
+
+        # Ping line
+        if st.connected and st.location:
+            p = self._ping_for_location(st.location, fast_text)
+            self.lbl_current_ping.set_text(str(p) if p is not None else "—")
+        else:
             self.lbl_current_ping.set_text("—")
-            self.connected_since = None
+
+        # License info (best-effort, async)
+        self._kick_license_refresh()
+
+
+    def _country_city_for_location(self, loc: str, locations_text: str):
+        loc = (loc or "").strip().lower()
+        if not loc:
+            return (None, None)
+        for iso, country, city, ping in cli.parse_locations(locations_text):
+            if city.strip().lower() == loc:
+                country_disp, city_disp = self._localize_country_city(iso, country, city)
+                return (country_disp, city_disp)
+        return (None, None)
 
     def _ping_for_location(self, loc: str, locations_text: str):
         loc = (loc or "").strip().lower()
@@ -530,9 +915,13 @@ class App:
         self.store_fast.clear()
         self.store_all.clear()
         for row in cli.parse_locations(fast_text):
-            self.store_fast.append(list(row))
+            iso, country, city, ping = row
+            country_disp, city_disp = self._localize_country_city(iso, country, city)
+            self.store_fast.append([iso, country_disp, city_disp, int(ping), city])
         for row in cli.parse_locations(all_text):
-            self.store_all.append(list(row))
+            iso, country, city, ping = row
+            country_disp, city_disp = self._localize_country_city(iso, country, city)
+            self.store_all.append([iso, country_disp, city_disp, int(ping), city])
         self.store_all_filtered.refilter()
 
         # Apply last location selection once, after the first locations load.
@@ -548,18 +937,47 @@ class App:
                 pass
 
     def on_row_activated(self, tv, path, col):
+        """Double-click on a location.
+
+        Behaviour:
+        - If VPN is already connected: switch location without asking sudo password.
+        - If VPN is disconnected: connect using the same interactive sudo flow as the green "Подключить" button.
+        """
         model = tv.get_model()
         it = model.get_iter(path)
-        iso,country,city,ping = model[it]
-        self.connect_location(city or iso)
+        iso, country, city_disp, ping, city_real = model[it]
+        loc = (city_real or "").strip() or (iso or "").strip()
+        if not loc:
+            return
+
+        if getattr(self, "_last_connected", False):
+            # When already connected, switching locations works without extra auth.
+            self.connect_location(loc)
+            return
+
+        # When disconnected, use interactive sudo prompt (same as connect button).
+        pwd = self._ask_sudo_password()
+        if not pwd:
+            return
+
+        def work():
+            return cli.connect_location_pw(pwd, loc)
+
+        def ok(_):
+            self._kick_status()
+
+        def err(e: Exception):
+            self._set_error(str(e))
+
+        run_bg(work, ok, err)
 
     def _selected_location(self):
         for tv in (self.tv_all, self.tv_fast):
             sel = tv.get_selection()
             model, it = sel.get_selected()
             if it:
-                iso,country,city,ping = model[it]
-                return city or iso
+                iso, country, city_disp, ping, city_real = model[it]
+                return (city_real or "").strip() or (iso or "").strip()
         return ""
 
     def _select_location_in_lists(self, loc: str):
@@ -572,8 +990,8 @@ class App:
             it = model.get_iter_first() if model else None
             idx = 0
             while it is not None:
-                iso, country, city, ping = model[it]
-                val = (city or iso or "").strip().lower()
+                iso, country, city_disp, ping, city_real = model[it]
+                val = ((city_real or iso) or "").strip().lower()
                 if val == target:
                     path = Gtk.TreePath(idx)
                     tv.get_selection().select_path(path)
@@ -701,7 +1119,7 @@ class App:
         else: self.cmb_update_channel.set_active_id("release")
         self.sw_debug.set_active("on" in cfg.get("debug logging","").lower())
         self.sw_notify.set_active("on" in cfg.get("show notifications","").lower())
-        self.lbl_settings_out.set_text("Загружено из CLI.")
+        self._set_settings_out("Загружено из CLI.")
 
     # App-only preferences (persisted in ~/.local/share/adguardvpn-gui/config.json)
     def _load_app_prefs_to_ui(self):
@@ -718,6 +1136,22 @@ class App:
         self.ent_sudo_pwd.set_text(str(self.cfg.get("sudo_password") or ""))
         self.ent_sudo_pwd.set_sensitive(sudo_enabled)
 
+        # Language
+        lang = str(self.cfg.get("lang") or "ru")
+        if lang not in ("ru","en","de"):
+            lang = "ru"
+        self.cmb_lang.set_active_id(lang)
+
+        # Window size
+        w = int(self.cfg.get("window_width", 600) or 600)
+        h = int(self.cfg.get("window_height", 600) or 600)
+        w = max(400, min(1600, w))
+        h = max(400, min(1600, h))
+        if self.scale_win_w:
+            self.scale_win_w.set_value(w)
+        if self.scale_win_h:
+            self.scale_win_h.set_value(h)
+
     def _save_app_prefs_from_ui(self):
         self.cfg = load_config()
         self.cfg["remember_last_location"] = bool(self.sw_remember_last_loc.get_active())
@@ -726,6 +1160,16 @@ class App:
         enabled = bool(self.sw_sudo_pwd.get_active()) and bool(pwd)
         self.cfg["sudo_password_enabled"] = enabled
         self.cfg["sudo_password"] = pwd if enabled else ""
+        self.cfg["lang"] = self.cmb_lang.get_active_id() or "ru"
+
+        # Window size (persisted)
+        try:
+            w = int(self.scale_win_w.get_value()) if self.scale_win_w else 600
+            h = int(self.scale_win_h.get_value()) if self.scale_win_h else 600
+        except Exception:
+            w, h = 600, 600
+        self.cfg["window_width"] = max(400, min(1600, w))
+        self.cfg["window_height"] = max(400, min(1600, h))
 
         save_config(self.cfg)
 
@@ -756,12 +1200,18 @@ class App:
         self._save_app_prefs_from_ui()
 
     def settings_reload(self):
-        self.lbl_settings_out.set_text("Читаю…")
+        self._set_settings_out("Читаю…")
         run_bg(lambda: cli.config_show(),
-               lambda out: (self._render_settings(out), self.lbl_settings_out.set_text("Обновлено.")),
-               lambda e: self.lbl_settings_out.set_text(f"Ошибка: {e}"))
+               lambda out: (self._render_settings(out), self._set_settings_out("Обновлено.")),
+               lambda e: self._set_settings_out(f"Ошибка: {e}"))
 
     def settings_apply(self):
+        # Persist app-only preferences (language, window size, last-location, sudo password)
+        self._save_app_prefs_from_ui()
+        save_config(self.cfg)
+        self._apply_language()
+        self._apply_window_size()
+
         mode = self.cmb_mode.get_active_id() or "tun"
         dns = (self.entry_dns.get_text() or "").strip()
         def _apply():
@@ -777,10 +1227,10 @@ class App:
             outs.append(cli.config_set_debug_logging(onoff(self.sw_debug.get_active())))
             outs.append(cli.config_set_show_notifications(onoff(self.sw_notify.get_active())))
             return "\n".join([o for o in outs if o])
-        self.lbl_settings_out.set_text("Применяю…")
+        self._set_settings_out("Применяю…")
         run_bg(_apply,
-               lambda out: (self.lbl_settings_out.set_text(out or "Применено."), self.refresh_all()),
-               lambda e: self.lbl_settings_out.set_text(f"Ошибка: {e}"))
+               lambda out: (self._set_settings_out(out or "Применено."), self.refresh_all()),
+               lambda e: self._set_settings_out(f"Ошибка: {e}"))
 
     # Stats
     def _tick_stats(self):

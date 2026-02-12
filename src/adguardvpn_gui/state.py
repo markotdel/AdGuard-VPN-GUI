@@ -18,6 +18,10 @@ def default_config() -> dict:
         "last_location": "",
         "sudo_password_enabled": False,
         "sudo_password": "",
+        # UI preferences
+        "lang": "ru",
+        "window_width": 600,
+        "window_height": 600,
     }
 
 

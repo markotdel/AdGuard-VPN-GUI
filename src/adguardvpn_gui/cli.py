@@ -104,7 +104,13 @@ class VpnStatus:
     iface: str = ""
 
 def parse_status(text: str) -> VpnStatus:
-    t = (text or "").strip()
+    # `adguardvpn-cli status` can return multiple lines (e.g. hints like
+    # "You can disconnect by running ...").
+    # Parse only the first non-empty line so UI text stays clean.
+    t_all = (text or "").strip()
+    if not t_all:
+        return VpnStatus(False)
+    t = next((ln.strip() for ln in t_all.splitlines() if ln.strip()), "")
     if not t:
         return VpnStatus(False)
     if t.lower().startswith("connected to"):
@@ -120,7 +126,7 @@ def parse_status(text: str) -> VpnStatus:
         except Exception:
             pass
         if "running on " in t:
-            iface = t.split("running on ",1)[1].strip()
+            iface = t.split("running on ", 1)[1].strip()
         return VpnStatus(True, loc, mode, iface)
     if "disconnected" in t.lower():
         return VpnStatus(False)
@@ -142,3 +148,7 @@ def parse_locations(text: str):
         if m:
             rows.append((m.group(1), m.group(2).strip(), m.group(3).strip(), int(m.group(4))))
     return rows
+
+
+def license() -> str:
+    return run(["license"], timeout=20)
