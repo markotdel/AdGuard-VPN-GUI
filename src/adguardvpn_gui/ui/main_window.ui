@@ -1,28 +1,28 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <interface>
-  <requires lib="gtk+" version="3.20"/>
+  <requires lib="gtk+" version="3.20" />
 
   <object class="GtkAdjustment" id="adj_win_w">
-    <property name="lower">420</property>
+    <property name="lower">750</property>
     <property name="upper">1600</property>
     <property name="step-increment">10</property>
     <property name="page-increment">50</property>
-    <property name="value">600</property>
+    <property name="value">750</property>
   </object>
 
   <object class="GtkAdjustment" id="adj_win_h">
-    <property name="lower">420</property>
-    <property name="upper">1200</property>
+    <property name="lower">750</property>
+    <property name="upper">1600</property>
     <property name="step-increment">10</property>
     <property name="page-increment">50</property>
-    <property name="value">600</property>
+    <property name="value">750</property>
   </object>
 
 
 
   <object class="GtkWindow" id="main_window">
-    <property name="default-width">1180</property>
-    <property name="default-height">720</property>
+    <property name="default-width">750</property>
+    <property name="default-height">750</property>
     <property name="title">AdGuard VPN</property>
     <property name="window-position">center</property>
 
@@ -35,8 +35,7 @@
             <property name="show-close-button">true</property>
             <property name="title">AdGuard VPN</property>
 
-            <!-- GtkBuilder for Gtk3 doesn't support child type="end" reliably across distros.
-                 Use packing/pack-type instead. -->
+            
             <child>
               <object class="GtkButton" id="btn_refresh_all">
                 <property name="label">Обновить</property>
@@ -52,13 +51,13 @@
           <object class="GtkNotebook" id="notebook">
             <property name="tab-pos">top</property>
 
-            <!-- HOME -->
+            
             <child>
               <object class="GtkPaned" id="home_paned">
                 <property name="orientation">horizontal</property>
                 <property name="position">360</property>
 
-                <!-- LEFT: locations list -->
+                
                 <child>
                   <object class="GtkBox" id="home_locations">
                     <property name="orientation">vertical</property>
@@ -104,7 +103,7 @@
                           <object class="GtkScrolledWindow">
                             <property name="vexpand">true</property>
                             <child>
-                              <object class="GtkTreeView" id="tv_fast"/>
+                              <object class="GtkTreeView" id="tv_fast" />
                             </child>
                           </object>
                         </child>
@@ -118,7 +117,7 @@
                           <object class="GtkScrolledWindow">
                             <property name="vexpand">true</property>
                             <child>
-                              <object class="GtkTreeView" id="tv_all"/>
+                              <object class="GtkTreeView" id="tv_all" />
                             </child>
                           </object>
                         </child>
@@ -128,16 +127,14 @@
                   </object>
                 </child>
 
-                <!-- RIGHT: scalable background + hero overlay -->
+                
                 <child>
                   <object class="GtkOverlay" id="home_overlay">
                     <property name="hexpand">true</property>
                     <property name="vexpand">true</property>
 
                     <child>
-                      <!-- Background. If GtkImage is present, code will use it.
-                           If not, code falls back to drawing area.
-                           Keep drawing area to guarantee scaling on all GTK3 builds. -->
+                      
                       <object class="GtkDrawingArea" id="da_home_bg">
                         <property name="hexpand">true</property>
                         <property name="vexpand">true</property>
@@ -238,7 +235,7 @@
             </child>
             <child type="tab"><object class="GtkLabel"><property name="label">Главная</property></object></child>
 
-            <!-- EXCLUSIONS -->
+            
             <child>
               <object class="GtkBox" id="excl_page">
                 <property name="orientation">vertical</property>
@@ -249,8 +246,8 @@
                   <object class="GtkLabel">
                     <property name="label">Исключения</property>
                     <attributes>
-                      <attribute name="scale" value="1.4"/>
-                      <attribute name="weight" value="700"/>
+                      <attribute name="scale" value="1.4" />
+                      <attribute name="weight" value="700" />
                     </attributes>
                     <property name="xalign">0</property>
                   </object>
@@ -300,14 +297,14 @@
                 <child>
                   <object class="GtkScrolledWindow">
                     <property name="vexpand">true</property>
-                    <child><object class="GtkTreeView" id="tv_excl"/></child>
+                    <child><object class="GtkTreeView" id="tv_excl" /></child>
                   </object>
                 </child>
               </object>
             </child>
             <child type="tab"><object class="GtkLabel"><property name="label">Исключения</property></object></child>
 
-            <!-- STATS -->
+            
             <child>
               <object class="GtkBox" id="stats_page">
                 <property name="orientation">vertical</property>
@@ -317,8 +314,8 @@
                   <object class="GtkLabel">
                     <property name="label">Статистика (локальная)</property>
                     <attributes>
-                      <attribute name="scale" value="1.4"/>
-                      <attribute name="weight" value="700"/>
+                      <attribute name="scale" value="1.4" />
+                      <attribute name="weight" value="700" />
                     </attributes>
                     <property name="xalign">0</property>
                   </object>
@@ -329,16 +326,16 @@
                     <property name="column-spacing">24</property>
 
                     <child><object class="GtkLabel"><property name="label">Интерфейс:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">0</property></packing></child>
-                    <child><object class="GtkLabel" id="lbl_stat_iface_v"><property name="label">—</property><property name="xalign">0</property></object><packing><property name="left-attach">1</property><property name="top-attach">0</property></packing></child>
+<child><object class="GtkLabel" id="lbl_stat_iface_v"><property name="label">—</property><property name="xalign">0</property></object><packing><property name="left-attach">1</property><property name="top-attach">0</property></packing></child>
 
                     <child><object class="GtkLabel"><property name="label">Скачано (RX):</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">1</property></packing></child>
-                    <child><object class="GtkLabel" id="lbl_stat_in_v"><property name="label">—</property><property name="xalign">0</property></object><packing><property name="left-attach">1</property><property name="top-attach">1</property></packing></child>
+<child><object class="GtkLabel" id="lbl_stat_in_v"><property name="label">—</property><property name="xalign">0</property></object><packing><property name="left-attach">1</property><property name="top-attach">1</property></packing></child>
 
                     <child><object class="GtkLabel"><property name="label">Отправлено (TX):</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">2</property></packing></child>
-                    <child><object class="GtkLabel" id="lbl_stat_out_v"><property name="label">—</property><property name="xalign">0</property></object><packing><property name="left-attach">1</property><property name="top-attach">2</property></packing></child>
+<child><object class="GtkLabel" id="lbl_stat_out_v"><property name="label">—</property><property name="xalign">0</property></object><packing><property name="left-attach">1</property><property name="top-attach">2</property></packing></child>
 
                     <child><object class="GtkLabel"><property name="label">Сессия:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">3</property></packing></child>
-                    <child><object class="GtkLabel" id="lbl_stat_session_v"><property name="label">—</property><property name="xalign">0</property></object><packing><property name="left-attach">1</property><property name="top-attach">3</property></packing></child>
+<child><object class="GtkLabel" id="lbl_stat_session_v"><property name="label">—</property><property name="xalign">0</property></object><packing><property name="left-attach">1</property><property name="top-attach">2</property></packing></child>
                   </object>
                 </child>
 
@@ -348,7 +345,7 @@
                     <child>
                       <object class="GtkScrolledWindow">
                         <property name="vexpand">true</property>
-                        <child><object class="GtkTreeView" id="tv_stats_history"/></child>
+                        <child><object class="GtkTreeView" id="tv_stats_history" /></child>
                       </object>
                     </child>
                   </object>
@@ -357,7 +354,7 @@
             </child>
             <child type="tab"><object class="GtkLabel"><property name="label">Статистика</property></object></child>
 
-            <!-- SUPPORT -->
+            
             <child>
               <object class="GtkBox" id="support_page">
                 <property name="orientation">vertical</property>
@@ -367,8 +364,8 @@
                   <object class="GtkLabel">
                     <property name="label">Поддержка</property>
                     <attributes>
-                      <attribute name="scale" value="1.4"/>
-                      <attribute name="weight" value="700"/>
+                      <attribute name="scale" value="1.4" />
+                      <attribute name="weight" value="700" />
                     </attributes>
                     <property name="xalign">0</property>
                   </object>
@@ -413,7 +410,7 @@
             </child>
             <child type="tab"><object class="GtkLabel"><property name="label">Поддержка</property></object></child>
 
-            <!-- SETTINGS -->
+            
             <child>
               <object class="GtkBox" id="settings_page">
                 <property name="orientation">vertical</property>
@@ -423,115 +420,608 @@
                   <object class="GtkLabel">
                     <property name="label">Настройки</property>
                     <attributes>
-                      <attribute name="scale" value="1.4"/>
-                      <attribute name="weight" value="700"/>
+                      <attribute name="scale" value="1.4" />
+                      <attribute name="weight" value="700" />
                     </attributes>
                     <property name="xalign">0</property>
                   </object>
                 </child>
 
+                
                 <child>
-                  <object class="GtkGrid" id="grid_settings">
-                    <property name="row-spacing">10</property>
-                    <property name="column-spacing">16</property>
+                  <object class="GtkBox" id="grid_settings">
+                    <property name="orientation">vertical</property>
+                    <property name="spacing">12</property>
+                    <property name="margin-top">12</property>
+                    <property name="margin-start">12</property>
+                    <property name="margin-end">12</property>
 
-                    <child><object class="GtkLabel"><property name="label">Mode:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">0</property></packing></child>
-                    <child><object class="GtkComboBoxText" id="cmb_mode"><items><item id="tun">tun</item><item id="socks">socks</item></items></object><packing><property name="left-attach">1</property><property name="top-attach">0</property></packing></child>
+                    <child><object class="GtkGrid" id="settings_layout_grid"><property name="row-spacing">12</property><property name="column-spacing">12</property><property name="hexpand">false</property><property name="halign">start</property><child><object class="GtkFrame" id="frame_settings_basic">
+                        <property name="width-request">360</property><property name="hexpand">false</property><property name="halign">start</property><property name="label">Основные</property>
+                        <child>
+                          <object class="GtkGrid" id="grid_settings_basic">
+                            <property name="row-spacing">10</property>
+                            <property name="column-spacing">12</property>
+                            <property name="margin">12</property>
 
-                    <child><object class="GtkLabel"><property name="label">DNS upstream:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">1</property></packing></child>
-                    <child><object class="GtkEntry" id="entry_dns"><property name="placeholder-text">пусто = Default</property></object><packing><property name="left-attach">1</property><property name="top-attach">1</property></packing></child>
+                            <child>
+                              <object class="GtkLabel" id="lbl_set_mode">
+                                <property name="label">Режим:</property>
+                                <property name="xalign">0</property>
+                              </object>
+                              <packing><property name="left-attach">0</property><property name="top-attach">0</property></packing>
+                            </child>
+                            <child>
+                              <object class="GtkComboBoxText" id="cmb_mode">
+                                <items>
+                                  <item id="tun">tun</item>
+                                  <item id="socks">socks</item>
+                                </items>
+                                <property name="hexpand">False</property>
+                                <property name="halign">start</property>
+                                <property name="width-request">180</property>
+                              </object>
+                              <packing><property name="left-attach">1</property><property name="top-attach">0</property></packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="btn_help_mode">
+                                <property name="name">help_mode</property>
+                                <property name="label">?</property>
+                                <property name="relief">none</property>
+                                <property name="focus-on-click">False</property>
+                                <property name="tooltip-text">Режим работы VPN. Обычно оставляют по умолчанию.</property>
+                                <property name="width-request">26</property>
+                                <property name="height-request">26</property>
+                                <property name="halign">end</property>
+                                <property name="valign">center</property>
+                                <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                              </object>
+                              <packing><property name="left-attach">2</property><property name="top-attach">0</property></packing>
+                            </child>
 
-                    <child><object class="GtkLabel"><property name="label">Change system DNS:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">2</property></packing></child>
-                    <child><object class="GtkSwitch" id="sw_change_dns"/><packing><property name="left-attach">1</property><property name="top-attach">2</property></packing></child>
+                            <child>
+                              <object class="GtkLabel" id="lbl_set_protocol">
+                                <property name="label">Протокол:</property>
+                                <property name="xalign">0</property>
+                              </object>
+                              <packing><property name="left-attach">0</property><property name="top-attach">1</property></packing>
+                            </child>
+                            <child>
+                              <object class="GtkComboBoxText" id="cmb_protocol">
+                                <items>
+                                  <item id="auto">auto</item>
+                                  <item id="http2">http2</item>
+                                  <item id="quic">quic</item>
+                                </items>
+                                <property name="hexpand">False</property>
+                                <property name="halign">start</property>
+                                <property name="width-request">180</property>
+                              </object>
+                              <packing><property name="left-attach">1</property><property name="top-attach">1</property></packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="btn_help_protocol">
+                                <property name="name">help_protocol</property>
+                                <property name="label">?</property>
+                                <property name="relief">none</property>
+                                <property name="focus-on-click">false</property>
+                                <property name="tooltip-text">Протокол транспорта. Обычно auto.</property>
+                                <property name="width-request">26</property>
+                                <property name="height-request">26</property>
+                                <property name="halign">end</property>
+                                <property name="valign">center</property>
+                                <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                              </object>
+                              <packing><property name="left-attach">2</property><property name="top-attach">1</property></packing>
+                            </child>
 
-                    <child><object class="GtkLabel"><property name="label">Crash reporting:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">3</property></packing></child>
-                    <child><object class="GtkSwitch" id="sw_crash"/><packing><property name="left-attach">1</property><property name="top-attach">3</property></packing></child>
+                            <child>
+                              <object class="GtkLabel" id="lbl_set_dns_upstream">
+                                <property name="label">DNS upstream:</property>
+                                <property name="xalign">0</property>
+                              </object>
+                              <packing><property name="left-attach">0</property><property name="top-attach">2</property></packing>
+                            </child>
+                            <child>
+                              <object class="GtkEntry" id="entry_dns">
+                                <property name="placeholder-text">пусто = Default</property>
+                                <property name="hexpand">False</property>
+                                <property name="halign">start</property>
+                                </object>
+                              <packing><property name="left-attach">1</property><property name="top-attach">2</property></packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="btn_help_dns_upstream">
+                                <property name="name">help_dns_upstream</property>
+                                <property name="label">?</property>
+                                <property name="relief">none</property>
+                                <property name="focus-on-click">False</property>
+                                <property name="tooltip-text">DNS upstream — DNS‑сервер для запросов через VPN. Пусто = по умолчанию.</property>
+                                <property name="width-request">26</property>
+                                <property name="height-request">26</property>
+                                <property name="halign">end</property>
+                                <property name="valign">center</property>
+                                <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                              </object>
+                              <packing><property name="left-attach">2</property><property name="top-attach">2</property></packing>
+                            </child>
 
-                    <child><object class="GtkLabel"><property name="label">Telemetry:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">4</property></packing></child>
-                    <child><object class="GtkSwitch" id="sw_telemetry"/><packing><property name="left-attach">1</property><property name="top-attach">4</property></packing></child>
+                            <child>
+                              <object class="GtkLabel" id="lbl_set_update_channel">
+                                <property name="label">Канал обновлений:</property>
+                                <property name="xalign">0</property>
+                              </object>
+                              <packing><property name="left-attach">0</property><property name="top-attach">3</property></packing>
+                            </child>
+                            <child>
+                              <object class="GtkComboBoxText" id="cmb_update_channel">
+                                <items>
+                                  <item id="release">release</item>
+                                  <item id="beta">beta</item>
+                                  <item id="nightly">nightly</item>
+                                </items>
+                                <property name="hexpand">False</property>
+                                <property name="halign">start</property>
+                                <property name="width-request">180</property>
+                              </object>
+                              <packing><property name="left-attach">1</property><property name="top-attach">2</property></packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="btn_help_update_channel">
+                                <property name="name">help_update_channel</property>
+                                <property name="label">?</property>
+                                <property name="relief">none</property>
+                                <property name="focus-on-click">false</property>
+                                <property name="tooltip-text">Канал обновлений (release/beta/nightly).</property>
+                                <property name="width-request">26</property>
+                                <property name="height-request">26</property>
+                                <property name="halign">end</property>
+                                <property name="valign">center</property>
+                                <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                              </object>
+                              <packing><property name="left-attach">2</property><property name="top-attach">3</property></packing>
+                            </child>
 
-                    <child><object class="GtkLabel"><property name="label">Protocol:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">5</property></packing></child>
-                    <child><object class="GtkComboBoxText" id="cmb_protocol"><items><item id="auto">auto</item><item id="http2">http2</item><item id="quic">quic</item></items></object><packing><property name="left-attach">1</property><property name="top-attach">5</property></packing></child>
-
-                    <child><object class="GtkLabel"><property name="label">Post-quantum:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">6</property></packing></child>
-                    <child><object class="GtkSwitch" id="sw_pq"/><packing><property name="left-attach">1</property><property name="top-attach">6</property></packing></child>
-
-                    <child><object class="GtkLabel"><property name="label">Update channel:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">7</property></packing></child>
-                    <child><object class="GtkComboBoxText" id="cmb_update_channel"><items><item id="release">release</item><item id="beta">beta</item><item id="nightly">nightly</item></items></object><packing><property name="left-attach">1</property><property name="top-attach">7</property></packing></child>
-
-                    <child><object class="GtkLabel"><property name="label">Debug logging:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">8</property></packing></child>
-                    <child><object class="GtkSwitch" id="sw_debug"/><packing><property name="left-attach">1</property><property name="top-attach">8</property></packing></child>
-
-                    <child><object class="GtkLabel"><property name="label">Show notifications:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">9</property></packing></child>
-                    <child><object class="GtkSwitch" id="sw_notify"/><packing><property name="left-attach">1</property><property name="top-attach">9</property></packing></child>
-
-                    <child><object class="GtkLabel"><property name="label">Загружать последнюю локацию при запуске:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">10</property></packing></child>
-                    <child><object class="GtkSwitch" id="sw_remember_last_loc"/><packing><property name="left-attach">1</property><property name="top-attach">10</property></packing></child>
-
-                    <child><object class="GtkLabel"><property name="label">Пароль sudo (сохранить):</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">11</property></packing></child>
-                    <child><object class="GtkSwitch" id="sw_sudo_pwd"/><packing><property name="left-attach">1</property><property name="top-attach">11</property></packing></child>
-
-                    <child><object class="GtkLabel"><property name="label">Пароль sudo:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">12</property></packing></child>
-                    <child>
-                      <object class="GtkEntry" id="ent_sudo_pwd">
-                        <property name="visibility">false</property>
-                        <property name="invisible-char">•</property>
-                        <property name="placeholder-text">(необязательно)</property>
+                          </object>
+                        </child>
                       </object>
-                      <packing><property name="left-attach">1</property><property name="top-attach">12</property></packing>
-                    </child>
-                    
-                    <child><object class="GtkLabel" id="lbl_lang"><property name="label">Язык:</property><property name="xalign">0</property></object><packing><property name="left-attach">0</property><property name="top-attach">13</property></packing></child>
-                    <child>
-                      <object class="GtkComboBoxText" id="cmb_lang">
-                        <items>
-                          <item id="ru">Русский</item>
-                          <item id="en">English</item>
-                          <item id="de">Deutsch</item>
-                        </items>
-                      </object>
-                      <packing><property name="left-attach">1</property><property name="top-attach">13</property></packing>
-                    </child>
+                    <packing><property name="left-attach">0</property><property name="top-attach">0</property></packing></child><child><object class="GtkFrame" id="frame_settings_sudo">
+                            <property name="width-request">360</property><property name="hexpand">false</property><property name="halign">start</property><property name="label">Права (sudo)</property>
+                            <child>
+                              <object class="GtkGrid" id="grid_settings_sudo">
+                                <property name="row-spacing">10</property>
+                                <property name="column-spacing">12</property>
+                                <property name="margin">12</property>
 
-                    <!-- Window size preferences -->
-                    <child>
-                      <object class="GtkLabel" id="lbl_win_w">
-                        <property name="label">Размер окна (ширина):</property>
-                        <property name="xalign">0</property>
-                      </object>
-                      <packing><property name="left-attach">0</property><property name="top-attach">14</property></packing>
-                    </child>
-                    <child>
-                      <object class="GtkScale" id="scale_win_w">
-                        <property name="orientation">horizontal</property>
-                        <property name="digits">0</property>
-                        <property name="draw-value">true</property>
-                        <property name="value-pos">right</property>
-                        <property name="hexpand">true</property>
-                        <property name="adjustment">adj_win_w</property>
-                      </object>
-                      <packing><property name="left-attach">1</property><property name="top-attach">14</property></packing>
-                    </child>
+                                <child>
+                                  <object class="GtkLabel" id="lbl_sudo_save">
+                                    <property name="label">Пароль sudo (сохранить):</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing><property name="left-attach">0</property><property name="top-attach">0</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="sw_sudo_pwd">
+                                    <property name="halign">start</property>
+                                    <property name="valign">center</property>
+                                    <property name="hexpand">False</property>
+                                  </object>
+                                  <packing><property name="left-attach">1</property><property name="top-attach">0</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="btn_help_sudo_pwd_save">
+                                    <property name="label">?</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="focus-on-click">False</property>
+                                    <property name="width-request">26</property>
+                                    <property name="height-request">26</property>
+                                    <property name="halign">end</property>
+                                    <property name="valign">center</property>
+                                    <property name="name">btn_help_sudo_pwd_save</property>
+                                    <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                                  </object>
+                                  <packing><property name="left-attach">2</property><property name="top-attach">0</property></packing>
+                                </child>
 
-                    <child>
-                      <object class="GtkLabel" id="lbl_win_h">
-                        <property name="label">Размер окна (высота):</property>
-                        <property name="xalign">0</property>
+                                <child>
+                                  <object class="GtkLabel" id="lbl_sudo_pwd">
+                                    <property name="label">Пароль sudo:</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing><property name="left-attach">0</property><property name="top-attach">1</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkEntry" id="ent_sudo_pwd">
+                                    <property name="visibility">false</property>
+                                    <property name="invisible-char">•</property>
+                                    <property name="placeholder-text">(необязательно)</property>
+                                    <property name="hexpand">False</property>
+                                    <property name="halign">start</property>
+                                    <property name="width-request">220</property>
+                                  </object>
+                                  <packing><property name="left-attach">1</property><property name="top-attach">1</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="btn_help_sudo_pwd">
+                                    <property name="label">?</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="focus-on-click">False</property>
+                                    <property name="width-request">26</property>
+                                    <property name="height-request">26</property>
+                                    <property name="halign">end</property>
+                                    <property name="valign">center</property>
+                                    <property name="name">btn_help_sudo_pwd</property>
+                                    <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                                  </object>
+                                  <packing><property name="left-attach">2</property><property name="top-attach">1</property></packing>
+                                </child>
+
+                              </object>
+                            </child>
+                          </object>
+                        <packing><property name="left-attach">1</property><property name="top-attach">0</property></packing></child><child><object class="GtkFrame" id="frame_settings_system">
+                            <property name="width-request">360</property><property name="hexpand">false</property><property name="halign">start</property><property name="label">Система</property>
+                            <child>
+                              <object class="GtkGrid" id="grid_settings_system">
+                                <property name="row-spacing">10</property>
+                                <property name="column-spacing">12</property>
+                                <property name="margin">12</property>
+
+                                <child>
+                                  <object class="GtkLabel" id="lbl_set_change_dns">
+                                    <property name="label">Менять системный DNS:</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing><property name="left-attach">0</property><property name="top-attach">0</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="sw_change_dns">
+                                    <property name="halign">start</property>
+                                    <property name="valign">center</property>
+                                    <property name="hexpand">False</property>
+                                  </object>
+                                  <packing><property name="left-attach">1</property><property name="top-attach">0</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="btn_help_change_dns">
+                                    <property name="name">help_change_dns</property>
+                                    <property name="label">?</property>
+                                    <property name="relief">none</property>
+                                    <property name="focus-on-click">False</property>
+                                    <property name="tooltip-text">Менять системный DNS при подключении VPN.</property>
+                                    <property name="width-request">26</property>
+                                    <property name="height-request">26</property>
+                                    <property name="halign">end</property>
+                                    <property name="valign">center</property>
+                                    <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                                  </object>
+                                  <packing><property name="left-attach">2</property><property name="top-attach">0</property></packing>
+                                </child>
+
+                                <child>
+                                  <object class="GtkLabel" id="lbl_set_debug_logging">
+                                    <property name="label">Отладочный лог:</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing><property name="left-attach">0</property><property name="top-attach">1</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="sw_debug">
+                                    <property name="halign">start</property>
+                                    <property name="valign">center</property>
+                                    <property name="hexpand">False</property>
+                                  </object>
+                                  <packing><property name="left-attach">1</property><property name="top-attach">1</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="btn_help_debug_logging">
+                                    <property name="name">help_debug_logging</property>
+                                    <property name="label">?</property>
+                                    <property name="relief">none</property>
+                                    <property name="focus-on-click">false</property>
+                                    <property name="tooltip-text">Включить расширенный лог для диагностики.</property>
+                                    <property name="width-request">26</property>
+                                    <property name="height-request">26</property>
+                                    <property name="halign">end</property>
+                                    <property name="valign">center</property>
+                                    <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                                  </object>
+                                  <packing><property name="left-attach">2</property><property name="top-attach">1</property></packing>
+                                </child>
+
+                                <child>
+                                  <object class="GtkLabel" id="lbl_set_remember_last_loc">
+                                    <property name="label">Загружать последнюю локацию при запуске:</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing><property name="left-attach">0</property><property name="top-attach">2</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="sw_remember_last_loc">
+                                    <property name="halign">start</property>
+                                    <property name="valign">center</property>
+                                    <property name="hexpand">False</property>
+                                  </object>
+                                  <packing><property name="left-attach">1</property><property name="top-attach">2</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="btn_help_remember_last_loc">
+                                    <property name="label">?</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="focus-on-click">False</property>
+                                    <property name="width-request">26</property>
+                                    <property name="height-request">26</property>
+                                    <property name="halign">end</property>
+                                    <property name="valign">center</property>
+                                    <property name="name">btn_help_remember_last_loc</property>
+                                    <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                                  </object>
+                                  <packing><property name="left-attach">2</property><property name="top-attach">2</property></packing>
+                                </child>
+
+                              </object>
+                            </child>
+                          </object>
+                        <packing><property name="left-attach">0</property><property name="top-attach">1</property></packing></child><child><object class="GtkFrame" id="frame_settings_privacy">
+                            <property name="width-request">360</property><property name="hexpand">false</property><property name="halign">start</property><property name="label">Приватность</property>
+                            <child>
+                              <object class="GtkGrid" id="grid_settings_privacy">
+                                <property name="row-spacing">10</property>
+                                <property name="column-spacing">12</property>
+                                <property name="margin">12</property>
+
+                                <child>
+                                  <object class="GtkLabel" id="lbl_set_crash_reporting">
+                                    <property name="label">Отчёты о сбоях:</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing><property name="left-attach">0</property><property name="top-attach">0</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="sw_crash">
+                                    <property name="halign">start</property>
+                                    <property name="valign">center</property>
+                                    <property name="hexpand">False</property>
+                                  </object>
+                                  <packing><property name="left-attach">1</property><property name="top-attach">0</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="btn_help_crash_reporting">
+                                    <property name="name">help_crash_reporting</property>
+                                    <property name="label">?</property>
+                                    <property name="relief">none</property>
+                                    <property name="focus-on-click">False</property>
+                                    <property name="tooltip-text">Отправлять отчёты о сбоях (для улучшения продукта).</property>
+                                    <property name="width-request">26</property>
+                                    <property name="height-request">26</property>
+                                    <property name="halign">end</property>
+                                    <property name="valign">center</property>
+                                    <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                                  </object>
+                                  <packing><property name="left-attach">2</property><property name="top-attach">0</property></packing>
+                                </child>
+
+                                <child>
+                                  <object class="GtkLabel" id="lbl_set_telemetry">
+                                    <property name="label">Телеметрия:</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing><property name="left-attach">0</property><property name="top-attach">1</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="sw_telemetry">
+                                    <property name="halign">start</property>
+                                    <property name="valign">center</property>
+                                    <property name="hexpand">False</property>
+                                  </object>
+                                  <packing><property name="left-attach">1</property><property name="top-attach">1</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="btn_help_telemetry">
+                                    <property name="name">help_telemetry</property>
+                                    <property name="label">?</property>
+                                    <property name="relief">none</property>
+                                    <property name="focus-on-click">False</property>
+                                    <property name="tooltip-text">Телеметрия — обезличенная статистика использования.</property>
+                                    <property name="width-request">26</property>
+                                    <property name="height-request">26</property>
+                                    <property name="halign">end</property>
+                                    <property name="valign">center</property>
+                                    <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                                  </object>
+                                  <packing><property name="left-attach">2</property><property name="top-attach">1</property></packing>
+                                </child>
+
+                                <child>
+                                  <object class="GtkLabel" id="lbl_set_show_notifications">
+                                    <property name="label">Показывать уведомления:</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing><property name="left-attach">0</property><property name="top-attach">2</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="sw_notify">
+                                    <property name="halign">start</property>
+                                    <property name="valign">center</property>
+                                    <property name="hexpand">False</property>
+                                  </object>
+                                  <packing><property name="left-attach">1</property><property name="top-attach">2</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="btn_help_show_notifications">
+                                    <property name="name">help_show_notifications</property>
+                                    <property name="label">?</property>
+                                    <property name="relief">none</property>
+                                    <property name="focus-on-click">false</property>
+                                    <property name="tooltip-text">Показывать системные уведомления.</property>
+                                    <property name="width-request">26</property>
+                                    <property name="height-request">26</property>
+                                    <property name="halign">end</property>
+                                    <property name="valign">center</property>
+                                    <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                                  </object>
+                                  <packing><property name="left-attach">2</property><property name="top-attach">2</property></packing>
+                                </child>
+
+                                <child>
+                                  <object class="GtkLabel" id="lbl_set_post_quantum">
+                                    <property name="label">Постквантовый режим:</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing><property name="left-attach">0</property><property name="top-attach">3</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSwitch" id="sw_pq">
+                                    <property name="halign">start</property>
+                                    <property name="valign">center</property>
+                                    <property name="hexpand">False</property>
+                                  </object>
+                                  <packing><property name="left-attach">1</property><property name="top-attach">2</property></packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="btn_help_post_quantum">
+                                    <property name="name">help_post_quantum</property>
+                                    <property name="label">?</property>
+                                    <property name="relief">none</property>
+                                    <property name="focus-on-click">false</property>
+                                    <property name="tooltip-text">Постквантовый режим шифрования (если поддерживается).</property>
+                                    <property name="width-request">26</property>
+                                    <property name="height-request">26</property>
+                                    <property name="halign">end</property>
+                                    <property name="valign">center</property>
+                                    <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                                  </object>
+                                  <packing><property name="left-attach">2</property><property name="top-attach">3</property></packing>
+                                </child>
+
+                              </object>
+                            </child>
+                          </object>
+                        <packing><property name="left-attach">1</property><property name="top-attach">1</property></packing></child><child><object class="GtkFrame" id="frame_settings_ui">
+                        <property name="width-request">360</property>
+                        <property name="hexpand">false</property><property name="halign">start</property><property name="label">Интерфейс</property>
+                        <child>
+                          <object class="GtkGrid" id="grid_settings_ui">
+                            <property name="row-spacing">10</property>
+                            <property name="column-spacing">12</property>
+                            <property name="margin">12</property>
+
+                            <child>
+                              <object class="GtkLabel" id="lbl_lang">
+                                <property name="label">Язык:</property>
+                                <property name="xalign">0</property>
+                              </object>
+                              <packing><property name="left-attach">0</property><property name="top-attach">0</property></packing>
+                            </child>
+                            <child>
+                              <object class="GtkComboBoxText" id="cmb_lang">
+                                <items>
+                                  <item id="ru">Русский</item>
+                                  <item id="en">English</item>
+                                  <item id="de">Deutsch</item>
+                                </items>
+                                <property name="hexpand">False</property>
+                                <property name="halign">start</property>
+                                <property name="width-request">180</property>
+                              </object>
+                              <packing><property name="left-attach">1</property><property name="top-attach">0</property></packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="btn_help_lang">
+                                <property name="label">?</property>
+                                <property name="can-focus">False</property>
+                                <property name="focus-on-click">False</property>
+                                <property name="width-request">26</property>
+                                <property name="height-request">26</property>
+                                <property name="halign">end</property>
+                                <property name="valign">center</property>
+                                <property name="name">btn_help_lang</property>
+                                <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                              </object>
+                              <packing><property name="left-attach">2</property><property name="top-attach">0</property></packing>
+                            </child>
+
+                          </object>
+                        </child>
                       </object>
-                      <packing><property name="left-attach">0</property><property name="top-attach">15</property></packing>
-                    </child>
-                    <child>
-                      <object class="GtkScale" id="scale_win_h">
-                        <property name="orientation">horizontal</property>
-                        <property name="digits">0</property>
-                        <property name="draw-value">true</property>
-                        <property name="value-pos">right</property>
-                        <property name="hexpand">true</property>
-                        <property name="adjustment">adj_win_h</property>
+                    <packing><property name="left-attach">0</property><property name="top-attach">2</property></packing></child><child><object class="GtkFrame" id="frame_settings_window">
+                        <property name="width-request">360</property><property name="hexpand">false</property><property name="halign">start</property><property name="label">Размер окна</property>
+                        <child>
+                          <object class="GtkGrid" id="grid_settings_window">
+                            <property name="row-spacing">10</property>
+                            <property name="column-spacing">12</property>
+                            <property name="margin">12</property>
+
+                            <child>
+                              <object class="GtkLabel" id="lbl_win_w">
+                                <property name="label">Размер окна (ширина):</property>
+                                <property name="xalign">0</property>
+                              </object>
+                              <packing><property name="left-attach">0</property><property name="top-attach">0</property></packing>
+                            </child>
+                            <child>
+                              <object class="GtkScale" id="scale_win_w">
+                                <property name="orientation">horizontal</property>
+                                <property name="digits">0</property>
+                                <property name="draw-value">true</property>
+                                <property name="value-pos">right</property>
+                                <property name="hexpand">true</property>
+                                <property name="adjustment">adj_win_w</property>
+                              </object>
+                              <packing><property name="left-attach">1</property><property name="top-attach">0</property></packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="btn_help_win_w">
+                                <property name="label">?</property>
+                                <property name="can-focus">False</property>
+                                <property name="focus-on-click">False</property>
+                                <property name="width-request">26</property>
+                                <property name="height-request">26</property>
+                                <property name="halign">end</property>
+                                <property name="valign">center</property>
+                                <property name="name">btn_help_win_w</property>
+                                <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                              </object>
+                              <packing><property name="left-attach">2</property><property name="top-attach">0</property></packing>
+                            </child>
+
+                            <child>
+                              <object class="GtkLabel" id="lbl_win_h">
+                                <property name="label">Размер окна (высота):</property>
+                                <property name="xalign">0</property>
+                              </object>
+                              <packing><property name="left-attach">0</property><property name="top-attach">1</property></packing>
+                            </child>
+                            <child>
+                              <object class="GtkScale" id="scale_win_h">
+                                <property name="orientation">horizontal</property>
+                                <property name="digits">0</property>
+                                <property name="draw-value">true</property>
+                                <property name="value-pos">right</property>
+                                <property name="hexpand">true</property>
+                                <property name="adjustment">adj_win_h</property>
+                              </object>
+                              <packing><property name="left-attach">1</property><property name="top-attach">1</property></packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="btn_help_win_h">
+                                <property name="label">?</property>
+                                <property name="can-focus">False</property>
+                                <property name="focus-on-click">False</property>
+                                <property name="width-request">26</property>
+                                <property name="height-request">26</property>
+                                <property name="halign">end</property>
+                                <property name="valign">center</property>
+                                <property name="name">btn_help_win_h</property>
+                                <signal name="clicked" handler="_on_help_clicked" swapped="no" />
+                              </object>
+                              <packing><property name="left-attach">2</property><property name="top-attach">1</property></packing>
+                            </child>
+
+                          </object>
+                        </child>
                       </object>
-                      <packing><property name="left-attach">1</property><property name="top-attach">15</property></packing>
-                    </child>
-                  </object>
+                    <packing><property name="left-attach">1</property><property name="top-attach">2</property></packing></child></object></child></object>
                 </child>
 
                 <child>

@@ -688,12 +688,15 @@ class App:
             pass
 
     def _apply_window_size(self):
-        """Force a stable window size (prevents GTK from auto-growing after Apply)."""
+        """Apply saved window size.
+
+        We clamp to a sane minimum so the Settings UI remains usable.
+        """
         try:
-            w = int(self.cfg.get("window_width", 600) or 600)
-            h = int(self.cfg.get("window_height", 600) or 600)
-            w = max(400, min(1600, w))
-            h = max(400, min(1600, h))
+            w = int(self.cfg.get("window_width", 750) or 750)
+            h = int(self.cfg.get("window_height", 750) or 750)
+            w = max(750, min(1600, w))
+            h = max(750, min(1600, h))
             self.win.set_default_size(w, h)
             # resize() matters if the window is already realized
             self.win.resize(w, h)
@@ -1143,10 +1146,10 @@ class App:
         self.cmb_lang.set_active_id(lang)
 
         # Window size
-        w = int(self.cfg.get("window_width", 600) or 600)
-        h = int(self.cfg.get("window_height", 600) or 600)
-        w = max(400, min(1600, w))
-        h = max(400, min(1600, h))
+        w = int(self.cfg.get("window_width", 750) or 750)
+        h = int(self.cfg.get("window_height", 750) or 750)
+        w = max(750, min(1600, w))
+        h = max(750, min(1600, h))
         if self.scale_win_w:
             self.scale_win_w.set_value(w)
         if self.scale_win_h:
@@ -1164,12 +1167,12 @@ class App:
 
         # Window size (persisted)
         try:
-            w = int(self.scale_win_w.get_value()) if self.scale_win_w else 600
-            h = int(self.scale_win_h.get_value()) if self.scale_win_h else 600
+            w = int(self.scale_win_w.get_value()) if self.scale_win_w else 750
+            h = int(self.scale_win_h.get_value()) if self.scale_win_h else 750
         except Exception:
-            w, h = 600, 600
-        self.cfg["window_width"] = max(400, min(1600, w))
-        self.cfg["window_height"] = max(400, min(1600, h))
+            w, h = 750, 750
+        self.cfg["window_width"] = max(750, min(1600, w))
+        self.cfg["window_height"] = max(750, min(1600, h))
 
         save_config(self.cfg)
 
